@@ -1,54 +1,89 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useAuth } from "@/contexts/auth-context"
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/contexts/auth-context";
+import axios from "axios";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const { login, isAuthenticated } = useAuth()
-  const router = useRouter()
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const router = useRouter();
+  const { isAuthenticated, login } = useAuth();
+
+  const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push("/dashboard")
+      router.push("/dashboard");
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setIsLoading(true)
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
 
     if (!username.trim() || !password.trim()) {
-      setError("Please enter both username and password")
-      setIsLoading(false)
-      return
+      setError("Please enter both username and password");
+      setIsLoading(false);
+      return;
     }
 
     try {
-      const success = await login(username, password)
-      if (success) {
-        router.push("/dashboard")
+      const response = await axios.post(
+        `${baseURL}/user/login/`,
+        {
+          username,
+          password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const accessToken = response.data?.data?.access;
+      const refreshToken = response.data?.data?.refresh;
+
+      if (accessToken) {
+        // ✅ Context orqali login qilish
+        login(accessToken);
+
+        // ✅ Tokenlarni localStorage ga saqlash
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
+
+        // ✅ Dashboardga redirect
+        router.push("/dashboard");
       } else {
-        setError("Invalid username or password. Try admin/admin123")
+        setError("Login failed: Access token not found in response");
       }
-    } catch (err) {
-      setError("An error occurred during login")
+    } catch (err: any) {
+      const message =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Login failed. Please try again.";
+      setError(message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -91,14 +126,16 @@ export default function LoginPage() {
               />
             </div>
 
-            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full bg-green-600 hover:bg-green-700"
+              disabled={isLoading}
+            >
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
-
-            <div className="text-sm text-muted-foreground text-center">Demo credentials: admin / admin123</div>
           </form>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
