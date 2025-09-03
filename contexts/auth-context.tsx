@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
+    const storedToken = localStorage.getItem("agroAdminToken");
     if (storedToken) {
       setToken(storedToken);
     }
@@ -25,12 +25,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const login = (token: string) => {
-    localStorage.setItem("token", token);
+    localStorage.setItem("agroAdminToken", token);
     setToken(token);
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("agroAdminToken");
     localStorage.removeItem("refreshToken");
     setToken(null);
   };

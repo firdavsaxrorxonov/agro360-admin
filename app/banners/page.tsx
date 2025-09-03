@@ -35,7 +35,7 @@ export default function BannerPage() {
 
   const baseURL = "https://horeca.felixits.uz/api/v1/admin";
   const token =
-    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    typeof window !== "undefined" ? localStorage.getItem("agroAdminToken") : null;
 
   const api = axios.create({ baseURL });
 

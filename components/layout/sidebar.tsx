@@ -45,6 +45,7 @@ export function Sidebar() {
     logout()
     router.push("/login")
     close()
+    localStorage.removeItem("agroAdminToken")
   }
 
   return (
