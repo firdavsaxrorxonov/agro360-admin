@@ -9,17 +9,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import axios from "axios"
 import type { Category } from "@/types/product"
+import { useLanguage } from "@/contexts/language-context" // <-- qo‘shildi
 
 interface Unit {
   id: string
   name_uz: string
 }
 
+interface Supplier {
+  id: string
+  full_name: string
+  tg_id: string
+}
+
 interface ProductFormProps {
   isOpen: boolean
   onClose: () => void
   categories: Category[]
-  units: Unit[]             // ✅ parentdan keladi
+  units: Unit[]
   editingProduct?: {
     id: string
     name_uz: string
@@ -37,12 +44,14 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ isOpen, onClose, categories, units, editingProduct, onSuccess }: ProductFormProps) {
+  const { t } = useLanguage() // <-- qo‘shildi
+
   const [formData, setFormData] = useState({
     name_uz: "",
     name_ru: "",
     price: "",
-    category: categories[0]?.id.toString() || "",
-    unity: units[0]?.id || "",    // ✅ default value
+    category: "",
+    unity: "",
     description_uz: "",
     description_ru: "",
     tg_id: "",
@@ -51,15 +60,31 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
     imageFile: undefined as File | undefined,
   })
 
-  // 🔥 editingProduct yoki units o'zgarganda formData-ni yangilash
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      try {
+        const token = localStorage.getItem("agroAdminToken")
+        const { data } = await axios.get('https://horeca.felixits.uz/api/v1/orders/supplier/', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        setSuppliers(data)
+      } catch (err) {
+        console.error(t("Failed to fetch suppliers") + ":", err) // <-- tarjima qo‘shildi
+      }
+    }
+    fetchSuppliers()
+  }, [t])
+
   useEffect(() => {
     if (editingProduct) {
       setFormData({
         name_uz: editingProduct.name_uz,
         name_ru: editingProduct.name_ru,
         price: editingProduct.price.toString(),
-        category: editingProduct.category,
-        unity: editingProduct.unity || units[0]?.id || "",  // ✅ fallback
+        category: editingProduct.category || (categories[0]?.id.toString() || ""),
+        unity: editingProduct.unity || (units[0]?.id || ""),
         description_uz: editingProduct.description_uz || "",
         description_ru: editingProduct.description_ru || "",
         tg_id: editingProduct.tg_id || "",
@@ -67,22 +92,14 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
         article: editingProduct.article || "",
         imageFile: undefined,
       })
-    } else {
-      setFormData({
-        name_uz: "",
-        name_ru: "",
-        price: "",
-        category: categories[0]?.id.toString() || "",
-        unity: units[0]?.id || "",    // ✅ default value
-        description_uz: "",
-        description_ru: "",
-        tg_id: "",
-        code: "",
-        article: "",
-        imageFile: undefined,
-      })
+    } else if (units.length > 0 && categories.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        category: categories[0].id.toString(),
+        unity: units[0].id,
+      }))
     }
-  }, [editingProduct, categories, units])
+  }, [editingProduct, units, categories])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -91,8 +108,9 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (!formData.name_uz || !formData.name_ru || !formData.price || !formData.category || !formData.unity) {
-      alert("Please fill all required fields")
+      alert(t("Please fill all required fields"))
       return
     }
 
@@ -129,7 +147,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
       onClose()
     } catch (err: any) {
       console.error(err.response?.data || err)
-      alert("Error: " + JSON.stringify(err.response?.data || err))
+      alert(t("Error") + ": " + JSON.stringify(err.response?.data || err))
     }
   }
 
@@ -137,102 +155,133 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{editingProduct ? "Edit Product" : "Create Product"}</DialogTitle>
+          <DialogTitle>{editingProduct ? t("update") : t("create")}</DialogTitle>
           <DialogDescription>
-            {editingProduct ? "Update the product information below." : "Fill in the product information below."}
+            {editingProduct ? t("Update the product information below.") : t("Fill in the product information below.")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Name (UZ)</Label>
+              <Label>{t("Name (UZ)")}</Label>
               <Input value={formData.name_uz} onChange={(e) => setFormData({ ...formData, name_uz: e.target.value })} />
             </div>
             <div>
-              <Label>Name (RU)</Label>
+              <Label>{t("Name (RU)")}</Label>
               <Input value={formData.name_ru} onChange={(e) => setFormData({ ...formData, name_ru: e.target.value })} />
             </div>
           </div>
 
-          {/* Price & Category */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Price</Label>
-              <Input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} />
+              <Label>{t("Price")}</Label>
+              <Input
+                type="number"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+              />
             </div>
             <div>
-              <Label>Category</Label>
-              <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+              <Label>{t("Category")}</Label>
+              {categories.length > 0 ? (
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("Select category")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id.toString()}>
+                        {cat.nameUz}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="text-gray-500">{t("Loading categories...")}</div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <Label>{t("Unit")}</Label>
+            {units.length > 0 ? (
+              <Select value={formData.unity} onValueChange={(value) => setFormData({ ...formData, unity: value })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={t("Select unit")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.nameUz}
+                  {units.map((unit) => (
+                    <SelectItem key={unit.id} value={unit.id}>
+                      {unit.name_uz}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            ) : (
+              <div className="text-gray-500">{t("Loading units...")}</div>
+            )}
           </div>
 
-          {/* Unit */}
           <div>
-            <Label>Unit</Label>
-            <Select value={formData.unity} onValueChange={(value) => setFormData({ ...formData, unity: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select unit" />
-              </SelectTrigger>
-              <SelectContent>
-                {units.map((unit) => (
-                  <SelectItem key={unit.id} value={unit.id}>
-                    {unit.name_uz}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>{t("Telegram ID")}</Label>
+            {suppliers.length > 0 ? (
+              <Select value={formData.tg_id} onValueChange={(value) => setFormData({ ...formData, tg_id: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("Select Telegram ID")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers.map((s) => (
+                    <SelectItem key={s.id} value={s.tg_id}>
+                      {s.full_name} ({s.tg_id})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="text-gray-500">{t("Loading suppliers...")}</div>
+            )}
           </div>
 
-          {/* Tg ID & Code */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Tg ID</Label>
-              <Input value={formData.tg_id} onChange={(e) => setFormData({ ...formData, tg_id: e.target.value })} />
-            </div>
-            <div>
-              <Label>Code</Label>
+              <Label>{t("Code")}</Label>
               <Input value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} />
             </div>
+            <div>
+              <Label>{t("Article")}</Label>
+              <Input value={formData.article} onChange={(e) => setFormData({ ...formData, article: e.target.value })} />
+            </div>
           </div>
 
-          {/* Article */}
           <div>
-            <Label>Article</Label>
-            <Input value={formData.article} onChange={(e) => setFormData({ ...formData, article: e.target.value })} />
+            <Label>{t("Description (UZ)")}</Label>
+            <Textarea
+              value={formData.description_uz}
+              onChange={(e) => setFormData({ ...formData, description_uz: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>{t("Description (RU)")}</Label>
+            <Textarea
+              value={formData.description_ru}
+              onChange={(e) => setFormData({ ...formData, description_ru: e.target.value })}
+            />
           </div>
 
-          {/* Description */}
           <div>
-            <Label>Description (UZ)</Label>
-            <Textarea value={formData.description_uz} onChange={(e) => setFormData({ ...formData, description_uz: e.target.value })} />
-          </div>
-          <div>
-            <Label>Description (RU)</Label>
-            <Textarea value={formData.description_ru} onChange={(e) => setFormData({ ...formData, description_ru: e.target.value })} />
-          </div>
-
-          {/* Image */}
-          <div>
-            <Label>Image</Label>
+            <Label>{t("Image")}</Label>
             <Input type="file" accept="image/*" onChange={handleImageChange} />
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit">{editingProduct ? "Update" : "Create"}</Button>
+            <Button type="button" variant="outline" onClick={onClose}>
+              {t("cancel")}
+            </Button>
+            <Button type="submit">{editingProduct ? t("update") : t("create")}</Button>
           </div>
         </form>
       </DialogContent>

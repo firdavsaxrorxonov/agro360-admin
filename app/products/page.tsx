@@ -25,7 +25,7 @@ export default function ProductsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("") // ✅ search
+  const [searchTerm, setSearchTerm] = useState("")
 
   const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
   const token = typeof window !== "undefined" ? localStorage.getItem("agroAdminToken") : null
@@ -40,6 +40,7 @@ export default function ProductsPage() {
         api.get("/category/list/"),
         api.get("/unity/list/"),
       ])
+
       setCategories(
         catRes.data.results.map((c: any) => ({
           id: c.id,
@@ -47,6 +48,7 @@ export default function ProductsPage() {
           nameRu: c.name_ru,
         }))
       )
+
       setUnits(
         unitRes.data.results.map((u: any) => ({
           id: u.id,
@@ -56,6 +58,7 @@ export default function ProductsPage() {
       )
     } catch (error) {
       console.error("Failed to fetch categories or units:", error)
+      alert("Error fetching categories or units. Check your API URL or server.")
     }
   }
 
@@ -76,6 +79,7 @@ export default function ProductsPage() {
       )
     } catch (error) {
       console.error("Failed to fetch products:", error)
+      alert("Error fetching products. Check your API URL or server.")
     } finally {
       setLoading(false)
     }
@@ -88,13 +92,7 @@ export default function ProductsPage() {
 
   const filteredProducts = useMemo(() => {
     let temp = products
-
-    // category filter
-    if (selectedCategory !== "all") {
-      temp = temp.filter((p) => p.category === selectedCategory)
-    }
-
-    // search filter
+    if (selectedCategory !== "all") temp = temp.filter((p) => p.category === selectedCategory)
     if (searchTerm.trim() !== "") {
       const lowerSearch = searchTerm.toLowerCase()
       temp = temp.filter(
@@ -103,7 +101,6 @@ export default function ProductsPage() {
           p.name_ru.toLowerCase().includes(lowerSearch)
       )
     }
-
     return temp
   }, [products, selectedCategory, searchTerm])
 
@@ -113,45 +110,6 @@ export default function ProductsPage() {
   }, [filteredProducts, currentPage])
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
-
-  const handleSubmitProduct = async (productData: Omit<Product, "id" | "createdAt"> & { imageFile?: File }) => {
-    try {
-      const formData = new FormData()
-      formData.append("name_uz", productData.name_uz)
-      formData.append("name_ru", productData.name_ru)
-      formData.append("price", productData.price.toString())
-      formData.append(
-        "category",
-        typeof productData.category === "string" ? productData.category : productData.category.id
-      )
-      formData.append("description_uz", productData.description_uz)
-      formData.append("description_ru", productData.description_ru)
-      formData.append(
-        "unity",
-        typeof productData.unity === "string" ? productData.unity : productData.unity.id
-      )
-      formData.append("tg_id", productData.tg_id || "")
-      formData.append("code", productData.code || "")
-      formData.append("article", productData.article || "")
-      if (productData.imageFile) formData.append("image", productData.imageFile)
-
-      if (editingProduct) {
-        await api.patch(`/product/${editingProduct.id}/update/`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        })
-        setEditingProduct(null)
-      } else {
-        await api.post("/product/create/", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        })
-      }
-
-      await fetchProducts()
-      setIsFormOpen(false)
-    } catch (error) {
-      console.error("Failed to submit product:", error)
-    }
-  }
 
   const handleDeleteProduct = async (id: string) => {
     try {

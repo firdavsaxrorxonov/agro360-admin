@@ -47,6 +47,7 @@
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
+    "file-saver": "^2.0.5",
     "framer-motion": "^12.23.12",
     "geist": "latest",
     "input-otp": "1.4.1",
@@ -66,6 +67,7 @@
     "vaul": "^0.9.9",
     "vue": "latest",
     "vue-router": "latest",
+    "xlsx": "^0.18.5",
     "zod": "3.25.67"
   },
   "devDependencies": {

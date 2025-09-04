@@ -13,7 +13,6 @@ interface LanguageContextType {
 
 const translations = {
   uz: {
-    // Menyu va asosiy sahifa
     menu: "Menyu",
     dashboard: "Boshqaruv paneli",
     products: "Mahsulotlar",
@@ -34,8 +33,6 @@ const translations = {
     delete: "O'chirish",
     create: "Yaratish",
     update: "Yangilash",
-
-    // Dashboard uchun qo‘shimcha
     welcomeMessage: "Xush kelibsiz! Do‘koningizdagi yangiliklar mana bu yerda.",
     totalProducts: "Jami mahsulotlar",
     activeProducts: "Inventarda faol mahsulotlar",
@@ -50,16 +47,36 @@ const translations = {
     pageViews: "Sahifa ko‘rishlar",
     totalPageViews: "Bugungi jami sahifa ko‘rishlar",
     productCategories: "Mahsulot kategoriyalari",
-
-    // Categories sahifasi uchun qo‘shimcha
     categoriesTitle: "Kategoriyalar",
     categoriesSubtitle: "Mahsulot kategoriyalarini boshqarish",
     addCategory: "Kategoriya qo‘shish",
-    noCategories: "Hech qanday kategoriya topilmadi. Boshlash uchun birinchi kategoriyani yarating."
+    noCategories: "Hech qanday kategoriya topilmadi. Boshlash uchun birinchi kategoriyani yarating.",
+    "Name (UZ)": "Nom (UZ)",
+    "Name (RU)": "Nom (RU)",
+    Price: "Narx",
+    Category: "Kategoriya",
+    Unit: "O‘lchov birligi",
+    "Telegram ID": "Telegram ID",
+    Code: "Kod",
+    Article: "Maqola",
+    "Description (UZ)": "Tavsif (UZ)",
+    "Description (RU)": "Tavsif (RU)",
+    Image: "Rasm",
+    "Please fill all required fields": "Iltimos, barcha majburiy maydonlarni to‘ldiring",
+    "Select category": "Kategoriya tanlang",
+    "Select unit": "Birlik tanlang",
+    "Select Telegram ID": "Telegram ID tanlang",
+    "Loading categories...": "Kategoriyalar yuklanmoqda...",
+    "Loading units...": "Birliklar yuklanmoqda...",
+    "Loading suppliers...": "Yetkazib beruvchilar yuklanmoqda...",
+    Error: "Xato",
+    "Failed to fetch suppliers": "Yetkazib beruvchilarni olishda xato yuz berdi",
+    Update: "Yangilash",
+    "Fill in the product information below.": "Quyida mahsulot ma'lumotlarini to‘ldiring.",
+    "Update the product information below.": "Quyida mahsulot ma'lumotlarini yangilang.",
   },
 
   ru: {
-    // Меню и основная страница
     menu: "Меню",
     dashboard: "Панель управления",
     products: "Продукты",
@@ -80,8 +97,6 @@ const translations = {
     delete: "Удалить",
     create: "Создать",
     update: "Обновить",
-
-    // Дополнительно для Dashboard
     welcomeMessage: "Добро пожаловать! Вот что происходит в вашем магазине.",
     totalProducts: "Всего товаров",
     activeProducts: "Активные товары на складе",
@@ -96,12 +111,33 @@ const translations = {
     pageViews: "Просмотры страниц",
     totalPageViews: "Всего просмотров сегодня",
     productCategories: "Категории товаров",
-
-    // Для страницы категорий
     categoriesTitle: "Категории",
     categoriesSubtitle: "Управляйте категориями товаров",
     addCategory: "Добавить категорию",
-    noCategories: "Категории не найдены. Создайте первую категорию, чтобы начать."
+    noCategories: "Категории не найдены. Создайте первую категорию, чтобы начать.",
+    "Name (UZ)": "Название (UZ)",
+    "Name (RU)": "Название (RU)",
+    Price: "Цена",
+    Category: "Категория",
+    Unit: "Единица измерения",
+    "Telegram ID": "Telegram ID",
+    Code: "Код",
+    Article: "Артикул",
+    "Description (UZ)": "Описание (UZ)",
+    "Description (RU)": "Описание (RU)",
+    Image: "Изображение",
+    "Please fill all required fields": "Пожалуйста, заполните все обязательные поля",
+    "Select category": "Выберите категорию",
+    "Select unit": "Выберите единицу",
+    "Select Telegram ID": "Выберите Telegram ID",
+    "Loading categories...": "Категории загружаются...",
+    "Loading units...": "Единицы загружаются...",
+    "Loading suppliers...": "Поставщики загружаются...",
+    Error: "Ошибка",
+    "Failed to fetch suppliers": "Не удалось получить поставщиков",
+    Update: "Обновить",
+    "Fill in the product information below.": "Заполните информацию о продукте ниже.",
+    "Update the product information below.": "Обновите информацию о продукте ниже.",
   }
 }
 
