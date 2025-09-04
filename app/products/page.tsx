@@ -1,90 +1,170 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Layout } from "@/components/layout/layout"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Plus, Loader2 } from "lucide-react"
+import axios from "axios"
+
 import { ProductTable } from "@/components/products/product-table"
 import { ProductForm } from "@/components/products/product-form"
 import { Pagination } from "@/components/products/pagination"
-import { Plus } from "lucide-react"
 import type { Product, Category } from "@/types/product"
-
-// Mock data
-const mockCategories: Category[] = [
-  { id: 1, nameUz: "Elektronika", nameRu: "Электроника" },
-  { id: 2, nameUz: "Kiyim", nameRu: "Одежда" },
-  { id: 3, nameUz: "Oziq-ovqat", nameRu: "Продукты питания" },
-  { id: 4, nameUz: "Kitoblar", nameRu: "Книги" },
-]
-
-const mockProducts: Product[] = Array.from({ length: 45 }, (_, i) => ({
-  id: i + 1,
-  nameUz: `Mahsulot ${i + 1}`,
-  nameRu: `Продукт ${i + 1}`,
-  price: Math.floor(Math.random() * 1000) + 10,
-  category: mockCategories[Math.floor(Math.random() * mockCategories.length)].nameUz,
-  description: `Bu mahsulot haqida ma'lumot ${i + 1}`,
-  unit: Math.random() > 0.5 ? "piece" : "kg",
-  createdAt: new Date().toISOString(),
-}))
 
 const ITEMS_PER_PAGE = 20
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>(mockProducts)
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [units, setUnits] = useState<{ id: string; name_uz: string; name_ru: string }[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("") // ✅ search
 
-  // Filter products by category
+  const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
+  const token = typeof window !== "undefined" ? localStorage.getItem("agroAdminToken") : null
+
+  const api = axios.create({ baseURL })
+  if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`
+
+  // Fetch categories & units
+  const fetchCategoriesAndUnits = async () => {
+    try {
+      const [catRes, unitRes] = await Promise.all([
+        api.get("/category/list/"),
+        api.get("/unity/list/"),
+      ])
+      setCategories(
+        catRes.data.results.map((c: any) => ({
+          id: c.id,
+          nameUz: c.name_uz,
+          nameRu: c.name_ru,
+        }))
+      )
+      setUnits(
+        unitRes.data.results.map((u: any) => ({
+          id: u.id,
+          name_uz: u.name_uz,
+          name_ru: u.name_ru,
+        }))
+      )
+    } catch (error) {
+      console.error("Failed to fetch categories or units:", error)
+    }
+  }
+
+  // Fetch products
+  const fetchProducts = async () => {
+    try {
+      setLoading(true)
+      const { data } = await api.get("/product/list/")
+      setProducts(
+        (data.results || []).map((p: any) => ({
+          ...p,
+          category: typeof p.category === "object" ? p.category.id : p.category,
+          unity: typeof p.unity === "object" ? p.unity.id : p.unity,
+          tg_id: p.tg_id || "",
+          code: p.code || "",
+          article: p.article || "",
+        }))
+      )
+    } catch (error) {
+      console.error("Failed to fetch products:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchCategoriesAndUnits()
+    fetchProducts()
+  }, [])
+
   const filteredProducts = useMemo(() => {
-    if (selectedCategory === "all") return products
-    return products.filter((product) => product.category === selectedCategory)
-  }, [products, selectedCategory])
+    let temp = products
 
-  // Paginate products
+    // category filter
+    if (selectedCategory !== "all") {
+      temp = temp.filter((p) => p.category === selectedCategory)
+    }
+
+    // search filter
+    if (searchTerm.trim() !== "") {
+      const lowerSearch = searchTerm.toLowerCase()
+      temp = temp.filter(
+        (p) =>
+          p.name_uz.toLowerCase().includes(lowerSearch) ||
+          p.name_ru.toLowerCase().includes(lowerSearch)
+      )
+    }
+
+    return temp
+  }, [products, selectedCategory, searchTerm])
+
   const paginatedProducts = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-    return filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+    const start = (currentPage - 1) * ITEMS_PER_PAGE
+    return filteredProducts.slice(start, start + ITEMS_PER_PAGE)
   }, [filteredProducts, currentPage])
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
 
-  const handleUpdateProduct = (id: number, updates: Partial<Product>) => {
-    setProducts((prev) => prev.map((product) => (product.id === id ? { ...product, ...updates } : product)))
-  }
+  const handleSubmitProduct = async (productData: Omit<Product, "id" | "createdAt"> & { imageFile?: File }) => {
+    try {
+      const formData = new FormData()
+      formData.append("name_uz", productData.name_uz)
+      formData.append("name_ru", productData.name_ru)
+      formData.append("price", productData.price.toString())
+      formData.append(
+        "category",
+        typeof productData.category === "string" ? productData.category : productData.category.id
+      )
+      formData.append("description_uz", productData.description_uz)
+      formData.append("description_ru", productData.description_ru)
+      formData.append(
+        "unity",
+        typeof productData.unity === "string" ? productData.unity : productData.unity.id
+      )
+      formData.append("tg_id", productData.tg_id || "")
+      formData.append("code", productData.code || "")
+      formData.append("article", productData.article || "")
+      if (productData.imageFile) formData.append("image", productData.imageFile)
 
-  const handleDeleteProduct = (id: number) => {
-    setProducts((prev) => prev.filter((product) => product.id !== id))
-  }
+      if (editingProduct) {
+        await api.patch(`/product/${editingProduct.id}/update/`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
+        setEditingProduct(null)
+      } else {
+        await api.post("/product/create/", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
+      }
 
-  const handleCreateProduct = (productData: Omit<Product, "id" | "createdAt">) => {
-    const newProduct: Product = {
-      ...productData,
-      id: Math.max(...products.map((p) => p.id)) + 1,
-      createdAt: new Date().toISOString(),
+      await fetchProducts()
+      setIsFormOpen(false)
+    } catch (error) {
+      console.error("Failed to submit product:", error)
     }
-    setProducts((prev) => [newProduct, ...prev])
+  }
+
+  const handleDeleteProduct = async (id: string) => {
+    try {
+      await api.delete(`/product/${id}/delete/`)
+      await fetchProducts()
+    } catch (error) {
+      console.error("Failed to delete product:", error)
+    }
   }
 
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product)
     setIsFormOpen(true)
-  }
-
-  const handleUpdateExistingProduct = (productData: Omit<Product, "id" | "createdAt">) => {
-    if (editingProduct) {
-      handleUpdateProduct(editingProduct.id, productData)
-      setEditingProduct(null)
-    }
-  }
-
-  const handleFormClose = () => {
-    setIsFormOpen(false)
-    setEditingProduct(null)
   }
 
   return (
@@ -96,53 +176,73 @@ export default function ProductsPage() {
               <h1 className="text-3xl font-bold">Products</h1>
               <p className="text-muted-foreground">Manage your product inventory</p>
             </div>
-            <Button onClick={() => setIsFormOpen(true)} className="bg-green-600 hover:bg-green-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Product
+            <Button
+              onClick={() => {
+                setEditingProduct(null)
+                setIsFormOpen(true)
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Plus className="h-4 w-4 mr-2" /> Add Product
             </Button>
           </div>
 
-          {/* Category Filter */}
-          <div className="flex items-center gap-4">
-            <label htmlFor="category-filter" className="text-sm font-medium">
-              Filter by Category:
-            </label>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {mockCategories.map((category) => (
-                  <SelectItem key={category.id} value={category.nameUz}>
-                    {category.nameUz}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Search & Category Filter */}
+          <div className="flex gap-4 flex-wrap items-center">
+            <Input
+              placeholder="Search by name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-xs"
+            />
+
+            <div className="w-64">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.nameUz}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          {/* Products Table */}
-          <ProductTable
-            products={paginatedProducts}
-            onUpdateProduct={handleUpdateProduct}
-            onDeleteProduct={handleDeleteProduct}
-            onEditProduct={handleEditProduct}
-          />
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+            </div>
+          ) : (
+            <>
+              <ProductTable
+                products={paginatedProducts}
+                onEditProduct={handleEditProduct}
+                onDeleteProduct={handleDeleteProduct}
+                currentPage={currentPage}
+                itemsPerPage={ITEMS_PER_PAGE}
+                units={units}
+                categories={categories}
+              />
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+              {totalPages > 1 && (
+                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+              )}
+
+              <ProductForm
+                isOpen={isFormOpen}
+                onClose={() => setIsFormOpen(false)}
+                categories={categories}
+                units={units}
+                editingProduct={editingProduct}
+                onSuccess={fetchProducts}
+              />
+            </>
           )}
-
-          {/* Product Form Modal */}
-          <ProductForm
-            isOpen={isFormOpen}
-            onClose={handleFormClose}
-            onSubmit={editingProduct ? handleUpdateExistingProduct : handleCreateProduct}
-            categories={mockCategories}
-            editingProduct={editingProduct}
-          />
         </div>
       </Layout>
     </ProtectedRoute>

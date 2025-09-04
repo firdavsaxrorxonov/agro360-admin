@@ -30,8 +30,6 @@ const navigation = [
   { name: "Banner Upload", href: "/banners", icon: Image },
   { name: "Orders", href: "/orders", icon: ShoppingCart },
   { name: "Users", href: "/users", icon: Users },
-  { name: "Settings", href: "/settings", icon: Settings },
-  { name: "Profile", href: "/profile", icon: User },
 ]
 
 export function Sidebar() {

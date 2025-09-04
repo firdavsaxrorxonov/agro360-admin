@@ -1,56 +1,85 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import type { Category } from "@/types/product"
 
 interface CategoryFormProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (category: Omit<Category, "id">) => void
   editingCategory?: Category | null
+  onSubmit: (categoryData: FormData) => Promise<void>
 }
 
-export function CategoryForm({ isOpen, onClose, onSubmit, editingCategory }: CategoryFormProps) {
+export function CategoryForm({
+  isOpen,
+  onClose,
+  editingCategory,
+  onSubmit,
+}: CategoryFormProps) {
   const [formData, setFormData] = useState({
-    nameUz: editingCategory?.nameUz || "",
-    nameRu: editingCategory?.nameRu || "",
-    image: editingCategory?.image || "",
+    nameUz: "",
+    nameRu: "",
+    image: "",
   })
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!formData.nameUz || !formData.nameRu) {
-      return
+  useEffect(() => {
+    if (editingCategory) {
+      setFormData({
+        nameUz: editingCategory.nameUz || "",
+        nameRu: editingCategory.nameRu || "",
+        image: editingCategory.image || "",
+      })
+      setImageFile(null)
+    } else {
+      setFormData({ nameUz: "", nameRu: "", image: "" })
+      setImageFile(null)
     }
+  }, [editingCategory])
 
-    onSubmit({
-      nameUz: formData.nameUz,
-      nameRu: formData.nameRu,
-      image: formData.image,
-    })
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.nameUz || !formData.nameRu) return
 
-    // Reset form
-    setFormData({
-      nameUz: "",
-      nameRu: "",
-      image: "",
-    })
-    onClose()
+    try {
+      setLoading(true)
+      const data = new FormData()
+      data.append("name_uz", formData.nameUz)
+      data.append("name_ru", formData.nameRu)
+
+      // 🔹 image optional: agar tanlangan bo‘lsa append qilamiz
+      if (imageFile) {
+        data.append("image", imageFile)
+      }
+
+      await onSubmit(data)
+
+      onClose()
+      setFormData({ nameUz: "", nameRu: "", image: "" })
+      setImageFile(null)
+    } catch (error) {
+      console.error("Kategoriya saqlashda xato:", error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // In a real app, you would upload to a server
-      const imageUrl = URL.createObjectURL(file)
-      setFormData({ ...formData, image: imageUrl })
+      setImageFile(file)
+      setFormData({ ...formData, image: URL.createObjectURL(file) })
     }
   }
 
@@ -58,9 +87,13 @@ export function CategoryForm({ isOpen, onClose, onSubmit, editingCategory }: Cat
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{editingCategory ? "Edit Category" : "Create New Category"}</DialogTitle>
+          <DialogTitle>
+            {editingCategory ? "Edit Category" : "Create New Category"}
+          </DialogTitle>
           <DialogDescription>
-            {editingCategory ? "Update the category information below." : "Fill in the category information below."}
+            {editingCategory
+              ? "Update the category information below."
+              : "Fill in the category information below."}
           </DialogDescription>
         </DialogHeader>
 
@@ -70,7 +103,9 @@ export function CategoryForm({ isOpen, onClose, onSubmit, editingCategory }: Cat
             <Input
               id="nameUz"
               value={formData.nameUz}
-              onChange={(e) => setFormData({ ...formData, nameUz: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, nameUz: e.target.value })
+              }
               placeholder="Enter category name in Uzbek"
               required
             />
@@ -81,7 +116,9 @@ export function CategoryForm({ isOpen, onClose, onSubmit, editingCategory }: Cat
             <Input
               id="nameRu"
               value={formData.nameRu}
-              onChange={(e) => setFormData({ ...formData, nameRu: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, nameRu: e.target.value })
+              }
               placeholder="Enter category name in Russian"
               required
             />
@@ -89,11 +126,16 @@ export function CategoryForm({ isOpen, onClose, onSubmit, editingCategory }: Cat
 
           <div className="space-y-2">
             <Label htmlFor="image">Category Image</Label>
-            <Input id="image" type="file" accept="image/*" onChange={handleImageUpload} />
+            <Input
+              id="image"
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+            />
             {formData.image && (
               <div className="mt-2">
                 <img
-                  src={formData.image || "/placeholder.svg"}
+                  src={formData.image}
                   alt="Preview"
                   className="w-full h-32 object-cover rounded border"
                 />
@@ -105,8 +147,16 @@ export function CategoryForm({ isOpen, onClose, onSubmit, editingCategory }: Cat
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-green-600 hover:bg-green-700">
-              {editingCategory ? "Update Category" : "Create Category"}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {loading
+                ? "Saving..."
+                : editingCategory
+                  ? "Update Category"
+                  : "Create Category"}
             </Button>
           </div>
         </form>

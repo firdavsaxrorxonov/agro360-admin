@@ -6,13 +6,9 @@ interface StatCardProps {
   value: string | number
   description?: string
   icon: LucideIcon
-  trend?: {
-    value: number
-    isPositive: boolean
-  }
 }
 
-export function StatCard({ title, value, description, icon: Icon, trend }: StatCardProps) {
+export function StatCard({ title, value, description, icon: Icon, }: StatCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -22,12 +18,6 @@ export function StatCard({ title, value, description, icon: Icon, trend }: StatC
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
         {description && <p className="text-xs text-muted-foreground">{description}</p>}
-        {trend && (
-          <p className={`text-xs ${trend.isPositive ? "text-green-600" : "text-red-600"}`}>
-            {trend.isPositive ? "+" : ""}
-            {trend.value}% from last month
-          </p>
-        )}
       </CardContent>
     </Card>
   )

@@ -1,63 +1,99 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Layout } from "@/components/layout/layout"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { Button } from "@/components/ui/button"
 import { CategoryCard } from "@/components/categories/category-card"
 import { CategoryForm } from "@/components/categories/category-form"
 import { CategoryProducts } from "@/components/categories/category-products"
-import { Plus } from "lucide-react"
-import type { Product, Category } from "@/types/product"
-
-// Mock data - in a real app, this would come from an API
-const mockCategories: Category[] = [
-  { id: 1, nameUz: "Elektronika", nameRu: "Электроника", image: "/electronics-components.png" },
-  { id: 2, nameUz: "Kiyim", nameRu: "Одежда", image: "/diverse-clothing-rack.png" },
-  { id: 3, nameUz: "Oziq-ovqat", nameRu: "Продукты питания", image: "/diverse-food-spread.png" },
-  { id: 4, nameUz: "Kitoblar", nameRu: "Книги", image: "/stack-of-diverse-books.png" },
-  { id: 5, nameUz: "Sport", nameRu: "Спорт", image: "/diverse-group-playing-various-sports.png" },
-  { id: 6, nameUz: "Uy-joy", nameRu: "Дом и сад", image: "/cozy-cabin-interior.png" },
-]
-
-const mockProducts: Product[] = Array.from({ length: 30 }, (_, i) => ({
-  id: i + 1,
-  nameUz: `Mahsulot ${i + 1}`,
-  nameRu: `Продукт ${i + 1}`,
-  price: Math.floor(Math.random() * 1000) + 10,
-  category: mockCategories[Math.floor(Math.random() * mockCategories.length)].nameUz,
-  description: `Bu mahsulot haqida ma'lumot ${i + 1}`,
-  unit: Math.random() > 0.5 ? "piece" : "kg",
-  createdAt: new Date().toISOString(),
-}))
+import { Plus, Loader2 } from "lucide-react"
+import axios from "axios"
+import { toast } from "sonner"
+import type { Category } from "@/types/product"
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>(mockCategories)
-  const [products] = useState<Product[]>(mockProducts)
+  const [categories, setCategories] = useState<Category[]>([])
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
   const [isProductsModalOpen, setIsProductsModalOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  const getProductCount = (categoryName: string) => {
-    return products.filter((product) => product.category === categoryName).length
+  const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
+  const imgBaseURL = process.env.NEXT_PUBLIC_API_ImgBASE_URL ?? ""
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("agroAdminToken") : null
+  const lang =
+    typeof window !== "undefined" ? localStorage.getItem("lang") || "uz" : "uz"
+
+  const api = axios.create({ baseURL })
+
+  if (token) {
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`
   }
+  api.defaults.headers.common["Accept-Language"] = lang
 
-  const handleCreateCategory = (categoryData: Omit<Category, "id">) => {
-    const newCategory: Category = {
-      ...categoryData,
-      id: Math.max(...categories.map((c) => c.id)) + 1,
+  const fetchCategories = async () => {
+    try {
+      setLoading(true)
+      const { data } = await api.get("/category/list/")
+      if (Array.isArray(data.results)) {
+        const normalized = data.results.map((cat: any) => ({
+          id: cat.id,
+          nameUz: cat.name_uz,
+          nameRu: cat.name_ru,
+          image: cat.image
+            ? cat.image.startsWith("http")
+              ? cat.image
+              : `${imgBaseURL}${cat.image}`
+            : "/placeholder.svg",
+        }))
+        setCategories(normalized)
+      } else {
+        setCategories([])
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error)
+      toast.error("Failed to load categories")
+    } finally {
+      setLoading(false)
     }
-    setCategories((prev) => [newCategory, ...prev])
   }
 
-  const handleUpdateCategory = (categoryData: Omit<Category, "id">) => {
-    if (editingCategory) {
-      setCategories((prev) =>
-        prev.map((category) =>
-          category.id === editingCategory.id ? { ...categoryData, id: editingCategory.id } : category,
-        ),
-      )
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
+  const getCategoryName = (cat: Category) => (lang === "ru" ? cat.nameRu : cat.nameUz)
+  const getProductCount = (_categoryName: string) => 0
+
+  const handleCreateCategory = async (formData: FormData) => {
+    try {
+      await api.post("/category/create/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      toast.success("Category created successfully")
+      fetchCategories()
+    } catch (error) {
+      console.error(error)
+      toast.error("Failed to create category")
+    }
+  }
+
+  // 🔹 PATCH rasm optional
+  const handleUpdateCategory = async (formData: FormData) => {
+    if (!editingCategory) return
+    try {
+      await api.patch(`/category/${editingCategory.id}/update/`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      toast.success("Category updated successfully")
+      fetchCategories()
+    } catch (error: any) {
+      console.error(error.response?.data || error)
+      toast.error("Failed to update category")
+    } finally {
       setEditingCategory(null)
     }
   }
@@ -67,8 +103,15 @@ export default function CategoriesPage() {
     setIsFormOpen(true)
   }
 
-  const handleDeleteCategory = (id: number) => {
-    setCategories((prev) => prev.filter((category) => category.id !== id))
+  const handleDeleteCategory = async (id: string | number) => {
+    try {
+      await api.delete(`/category/${id}/delete/`)
+      setCategories((prev) => prev.filter((c) => c.id !== id))
+      toast.success("Category deleted")
+    } catch (error) {
+      console.error(error)
+      toast.error("Failed to delete category")
+    }
   }
 
   const handleViewProducts = (category: Category) => {
@@ -88,35 +131,47 @@ export default function CategoriesPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">Categories</h1>
-              <p className="text-muted-foreground">Manage your product categories</p>
+              <p className="text-muted-foreground">
+                Manage your product categories
+              </p>
             </div>
-            <Button onClick={() => setIsFormOpen(true)} className="bg-green-600 hover:bg-green-700">
+            <Button
+              onClick={() => setIsFormOpen(true)}
+              className="bg-green-600 hover:bg-green-700"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Category
             </Button>
           </div>
 
-          {/* Categories Grid */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {categories.map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category}
-                productCount={getProductCount(category.nameUz)}
-                onEdit={handleEditCategory}
-                onDelete={handleDeleteCategory}
-                onViewProducts={handleViewProducts}
-              />
-            ))}
-          </div>
-
-          {categories.length === 0 && (
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+            </div>
+          ) : categories.length > 0 ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {categories.map((category) => (
+                <CategoryCard
+                  key={category.id}
+                  category={{
+                    ...category,
+                    nameUz: getCategoryName(category),
+                  }}
+                  productCount={getProductCount(getCategoryName(category))}
+                  onEdit={handleEditCategory}
+                  onDelete={() => handleDeleteCategory(category.id)}
+                  onViewProducts={handleViewProducts}
+                />
+              ))}
+            </div>
+          ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No categories found. Create your first category to get started.</p>
+              <p className="text-muted-foreground">
+                No categories found. Create your first category to get started.
+              </p>
             </div>
           )}
 
-          {/* Category Form Modal */}
           <CategoryForm
             isOpen={isFormOpen}
             onClose={handleFormClose}
@@ -124,12 +179,11 @@ export default function CategoriesPage() {
             editingCategory={editingCategory}
           />
 
-          {/* Category Products Modal */}
           <CategoryProducts
             isOpen={isProductsModalOpen}
             onClose={() => setIsProductsModalOpen(false)}
             category={selectedCategory}
-            products={products}
+            products={[]}
           />
         </div>
       </Layout>

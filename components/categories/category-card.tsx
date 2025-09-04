@@ -22,7 +22,6 @@ export function CategoryCard({ category, productCount, onEdit, onDelete, onViewP
             <h3 className="font-semibold text-lg">{category.nameUz}</h3>
             <p className="text-sm text-muted-foreground">{category.nameRu}</p>
           </div>
-          <Badge variant="secondary">{productCount} products</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

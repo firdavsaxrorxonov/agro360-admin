@@ -52,8 +52,9 @@ export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
       <CardContent className="space-y-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
-          <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>
+          <span>Joined {user.date_joined}</span>
         </div>
+
         {user.lastLogin && (
           <div className="text-sm text-muted-foreground">
             Last login: {new Date(user.lastLogin).toLocaleDateString()}

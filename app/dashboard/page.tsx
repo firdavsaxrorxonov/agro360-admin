@@ -1,15 +1,48 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Layout } from "@/components/layout/layout"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { StatCard } from "@/components/dashboard/stat-card"
-import { RecentActivity } from "@/components/dashboard/recent-activity"
-import { QuickActions } from "@/components/dashboard/quick-actions"
-import { Package, Users, ShoppingCart, DollarSign, TrendingUp, Eye } from "lucide-react"
+import { Package, Users, ShoppingCart, DollarSign } from "lucide-react"
 import { useLanguage } from "@/contexts/language-context"
+import axios from "axios"
+
+interface DashboardStats {
+  products: number
+  users: number
+  orders: number
+  total_price: { total_price: number }
+  categories: number
+}
 
 export default function DashboardPage() {
   const { t } = useLanguage()
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
+  const token = typeof window !== "undefined" ? localStorage.getItem("agroAdminToken") : null
+  const api = axios.create({ baseURL })
+  if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true)
+      const { data } = await api.get("/dashboard/statistics/")
+      if (data.status === "success") {
+        setStats(data.data)
+      }
+    } catch (err) {
+      console.error("Failed to fetch dashboard stats:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchStats()
+  }, [])
 
   return (
     <ProtectedRoute>
@@ -25,66 +58,38 @@ export default function DashboardPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title={t("totalProducts")}
-              value="1,234"
+              value={loading ? "..." : stats?.products.toLocaleString() ?? "0"}
               description={t("activeProducts")}
               icon={Package}
-              trend={{ value: 12, isPositive: true }}
             />
             <StatCard
               title={t("totalUsers")}
-              value="856"
+              value={loading ? "..." : stats?.users.toLocaleString() ?? "0"}
               description={t("registeredUsers")}
               icon={Users}
-              trend={{ value: 8, isPositive: true }}
             />
             <StatCard
               title={t("totalOrders")}
-              value="2,341"
+              value={loading ? "..." : stats?.orders.toLocaleString() ?? "0"}
               description={t("ordersThisMonth")}
               icon={ShoppingCart}
-              trend={{ value: 23, isPositive: true }}
             />
             <StatCard
               title={t("revenue")}
-              value="$45,231"
+              value={loading ? "..." : `${((stats?.total_price.total_price ?? 0) / 100).toLocaleString()} UZS`}
               description={t("totalRevenue")}
               icon={DollarSign}
-              trend={{ value: 15, isPositive: true }}
             />
           </div>
 
           {/* Secondary Stats */}
           <div className="grid gap-4 md:grid-cols-3">
             <StatCard
-              title={t("conversionRate")}
-              value="3.2%"
-              description={t("visitorsToCustomers")}
-              icon={TrendingUp}
-              trend={{ value: 2.1, isPositive: true }}
-            />
-            <StatCard
-              title={t("pageViews")}
-              value="12,543"
-              description={t("totalPageViews")}
-              icon={Eye}
-              trend={{ value: 5.4, isPositive: true }}
-            />
-            <StatCard
               title={t("categories")}
-              value="24"
+              value={loading ? "..." : stats?.categories.toLocaleString() ?? "0"}
               description={t("productCategories")}
               icon={Package}
             />
-          </div>
-
-          {/* Dashboard Content Grid */}
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <RecentActivity />
-            </div>
-            <div>
-              <QuickActions />
-            </div>
           </div>
         </div>
       </Layout>
