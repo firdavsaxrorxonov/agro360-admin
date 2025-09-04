@@ -66,9 +66,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
     const fetchSuppliers = async () => {
       try {
         const token = localStorage.getItem("agroAdminToken")
-        const { data } = await axios.get('https://agro.felixits.uz/api/v1/orders/supplier/', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const { data } = await axios.get('https://agro.felixits.uz/api/v1/orders/supplier/')
         setSuppliers(data)
       } catch (err) {
         console.error(t("Failed to fetch suppliers") + ":", err) // <-- tarjima qo‘shildi
