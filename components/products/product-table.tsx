@@ -141,7 +141,7 @@ export function ProductTable({
                     />
                   ) : (
                     product.price
-                  )}
+                  )} UZS
                 </TableCell>
 
                 <TableCell>{getCategoryName(product.category)}</TableCell>

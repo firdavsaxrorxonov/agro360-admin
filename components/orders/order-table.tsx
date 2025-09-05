@@ -39,7 +39,7 @@ export function OrderTable({ orders, onViewOrder }: OrderTableProps) {
                 </div>
               </TableCell>
               <TableCell>{order.items.length} {t("items") || "items"}</TableCell>
-              <TableCell className="font-medium">${order.amount.toFixed(2)}</TableCell>
+              <TableCell className="font-medium">{order.amount.toFixed(2)} UZS</TableCell>
               <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
               <TableCell>
                 <Button size="sm" variant="ghost" onClick={() => onViewOrder(order)}>
