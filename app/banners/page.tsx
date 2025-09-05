@@ -17,6 +17,8 @@ import { Pagination } from "@/components/products/pagination";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import axios from "axios";
+import { useLanguage } from "@/contexts/language-context";
+
 
 interface Banner {
   id: string;
@@ -24,12 +26,13 @@ interface Banner {
 }
 
 export default function BannerPage() {
+  const { t } = useLanguage();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isSaving, setIsSaving] = useState(false); // ✅ loading holati
+  const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ITEMS_PER_PAGE = 10;
 
@@ -38,23 +41,16 @@ export default function BannerPage() {
     typeof window !== "undefined" ? localStorage.getItem("agroAdminToken") : null;
 
   const api = axios.create({ baseURL });
+  if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-  if (token) {
-    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  }
-
-  // ✅ Bannerlarni olish
   const fetchBanners = async () => {
     try {
       const { data } = await api.get("/banner/list/");
-      if (Array.isArray(data.results)) {
-        setBanners(data.results);
-      } else {
-        setBanners([]);
-      }
+      if (Array.isArray(data.results)) setBanners(data.results);
+      else setBanners([]);
     } catch (error) {
-      console.error("Error fetching banners:", error);
-      toast.error("Failed to load banners");
+      console.error(error);
+      toast.error(t("Failed to load banners"));
     }
   };
 
@@ -69,7 +65,7 @@ export default function BannerPage() {
 
   const handleFileChange = (file: File) => {
     if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file");
+      toast.error(t("Click to upload image"));
       return;
     }
     setSelectedFile(file);
@@ -77,64 +73,54 @@ export default function BannerPage() {
 
   const handleFormSubmit = async () => {
     if (!selectedFile && !editingBanner) {
-      toast.error("Please select an image");
+      toast.error(t("Click to upload image"));
       return;
     }
-
     if (!token) {
-      toast.error("Authentication required");
+      toast.error(t("Authentication required"));
       return;
     }
 
     const formData = new FormData();
-    if (selectedFile) {
-      formData.append("banner", selectedFile);
-    }
+    if (selectedFile) formData.append("banner", selectedFile);
 
     try {
-      setIsSaving(true); // ✅ loading start
+      setIsSaving(true);
 
       if (editingBanner) {
-        // ✅ PATCH ishlatyapmiz
         await api.patch(`/banner/${editingBanner.id}/update/`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        toast.success("Banner updated successfully");
+        toast.success(t("Banner updated successfully"));
       } else {
         await api.post("/banner/create/", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        toast.success("Banner added successfully");
+        toast.success(t("Banner added successfully"));
       }
 
       await fetchBanners();
       handleFormClose();
     } catch (error: any) {
-      console.error("Error saving banner:", error.response?.data || error.message);
-
-      if (error.response?.data?.banner) {
-        toast.error(error.response.data.banner[0]);
-      } else {
-        toast.error("Failed to save banner");
-      }
+      console.error(error);
+      toast.error(t("Failed to save banner"));
     } finally {
-      setIsSaving(false); // ✅ loading stop
+      setIsSaving(false);
     }
   };
 
   const handleDeleteBanner = async (id: string) => {
     if (!token) {
-      toast.error("Authentication required");
+      toast.error(t("Authentication required"));
       return;
     }
-
     try {
       await api.delete(`/banner/${id}/delete/`);
       setBanners(banners.filter((b) => b.id !== id));
-      toast.success("Banner deleted");
+      toast.success(t("Banner deleted"));
     } catch (error) {
-      console.error("Error deleting banner:", error);
-      toast.error("Failed to delete banner");
+      console.error(error);
+      toast.error(t("Failed to delete banner"));
     }
   };
 
@@ -157,14 +143,14 @@ export default function BannerPage() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Banners</h1>
-              <p className="text-muted-foreground">Manage your page banners</p>
+              <h1 className="text-3xl font-bold">{t("Banners")}</h1>
+              <p className="text-muted-foreground">{t("Manage your page banners")}</p>
             </div>
             <Button
               onClick={() => setIsFormOpen(true)}
               className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
             >
-              <Plus className="h-4 w-4" /> Add Banner
+              <Plus className="h-4 w-4" /> {t("Add Banner")}
             </Button>
           </div>
 
@@ -174,8 +160,8 @@ export default function BannerPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>№</TableHead>
-                  <TableHead>Banner</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t("Banner")}</TableHead>
+                  <TableHead>{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -242,7 +228,7 @@ export default function BannerPage() {
                   className="bg-white p-6 rounded-lg w-96"
                 >
                   <h2 className="text-xl font-bold mb-4">
-                    {editingBanner ? "Edit Banner" : "Add Banner"}
+                    {editingBanner ? t("Edit Banner") : t("Add Banner")}
                   </h2>
 
                   {/* File Upload Box */}
@@ -260,7 +246,7 @@ export default function BannerPage() {
                       <>
                         <Plus className="h-8 w-8 text-green-600 mb-2" />
                         <p className="text-sm text-muted-foreground">
-                          Click to upload image
+                          {t("Click to upload image")}
                         </p>
                       </>
                     ) : (
@@ -287,7 +273,7 @@ export default function BannerPage() {
                       onClick={handleFormClose}
                       disabled={isSaving}
                     >
-                      Cancel
+                      {t("cancel")}
                     </Button>
                     <Button
                       className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
@@ -295,7 +281,7 @@ export default function BannerPage() {
                       disabled={isSaving}
                     >
                       {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-                      {isSaving ? "Saving..." : "Save"}
+                      {isSaving ? t("Saving...") : t("save")}
                     </Button>
                   </div>
                 </motion.div>

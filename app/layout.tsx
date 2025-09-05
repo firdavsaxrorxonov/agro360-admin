@@ -9,7 +9,7 @@ import { Suspense } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Admin Panel",
+  title: "Agro365 Admin",
   description: "Admin Panel Dashboard",
   generator: "v0.app",
 };

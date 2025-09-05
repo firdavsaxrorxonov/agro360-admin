@@ -11,6 +11,9 @@ import { Pagination } from "@/components/products/pagination"
 import { motion, AnimatePresence } from "framer-motion"
 import axios from "axios"
 import { toast } from "sonner"
+import { useLanguage } from "@/contexts/language-context"
+
+
 
 export interface Unit {
   id: number
@@ -19,6 +22,7 @@ export interface Unit {
 }
 
 export default function UnitsPage() {
+  const { t } = useLanguage()
   const [units, setUnits] = useState<Unit[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -45,7 +49,7 @@ export default function UnitsPage() {
       })))
     } catch (error) {
       console.error(error)
-      toast.error("Failed to fetch units")
+      toast.error(t("Failed to fetch units"))
     } finally {
       setLoading(false)
     }
@@ -62,11 +66,11 @@ export default function UnitsPage() {
   const handleCreateUnit = async (data: Omit<Unit, "id">) => {
     try {
       await api.post("/unity/create/", { name_uz: data.nameUz, name_ru: data.nameRu })
-      toast.success("Unit created")
+      toast.success(t("Unit created"))
       fetchUnits()
     } catch (error: any) {
       console.error(error)
-      toast.error(error?.response?.data?.detail || "Failed to create unit")
+      toast.error(error?.response?.data?.detail || t("Failed to create unit"))
     }
   }
 
@@ -74,11 +78,11 @@ export default function UnitsPage() {
   const handleUpdateUnit = async (id: number, data: Omit<Unit, "id">) => {
     try {
       await api.patch(`/unity/${id}/update/`, { name_uz: data.nameUz, name_ru: data.nameRu })
-      toast.success("Unit updated")
+      toast.success(t("Unit updated"))
       fetchUnits()
     } catch (error: any) {
       console.error(error)
-      toast.error(error?.response?.data?.detail || "Failed to update unit")
+      toast.error(error?.response?.data?.detail || t("Failed to update unit"))
     }
   }
 
@@ -87,15 +91,15 @@ export default function UnitsPage() {
     try {
       await api.delete(`/unity/${id}/delete/`)
       setUnits(prev => prev.filter(u => u.id !== id))
-      toast.success("Unit deleted")
+      toast.success(t("Unit deleted"))
     } catch {
-      toast.error("Failed to delete unit")
+      toast.error(t("Failed to delete unit"))
     }
   }
 
   // OPEN CREATE FORM
   const openCreateForm = () => {
-    setEditingUnit(null)  // null bo‘lsa create ishlaydi
+    setEditingUnit(null)
     setNameUz("")
     setNameRu("")
     setIsFormOpen(true)
@@ -113,9 +117,9 @@ export default function UnitsPage() {
   const handleFormSubmit = async () => {
     const data = { nameUz, nameRu }
     if (editingUnit) {
-      await handleUpdateUnit(editingUnit.id, data)  // update
+      await handleUpdateUnit(editingUnit.id, data)
     } else {
-      await handleCreateUnit(data)                 // create
+      await handleCreateUnit(data)
     }
     setIsFormOpen(false)
   }
@@ -134,14 +138,14 @@ export default function UnitsPage() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Units</h1>
-              <p className="text-muted-foreground">Manage your measurement units</p>
+              <h1 className="text-3xl font-bold">{t("Unit")}</h1>
+              <p className="text-muted-foreground">{t("Manage your measurement units")}</p>
             </div>
             <Button
               onClick={openCreateForm}
               className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
             >
-              <Plus className="h-4 w-4" /> Add Unit
+              <Plus className="h-4 w-4" /> {t("Add Unit")}
             </Button>
           </div>
 
@@ -157,15 +161,14 @@ export default function UnitsPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>№</TableHead>
-                      <TableHead>Name (UZ)</TableHead>
-                      <TableHead>Name (RU)</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>{t("Name (UZ)")}</TableHead>
+                      <TableHead>{t("Name (RU)")}</TableHead>
+                      <TableHead>{t("Actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {paginatedUnits.map((unit, index) => (
                       <TableRow key={unit.id}>
-                        {/* № raqami = sahifadagi boshlanish + index + 1 */}
                         <TableCell className="font-medium">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                         <TableCell>{unit.nameUz}</TableCell>
                         <TableCell>{unit.nameRu}</TableCell>
@@ -187,7 +190,6 @@ export default function UnitsPage() {
                       </TableRow>
                     ))}
                   </TableBody>
-
                 </Table>
               </div>
 
@@ -216,22 +218,22 @@ export default function UnitsPage() {
                       transition={{ duration: 0.2 }}
                       className="bg-white p-6 rounded-lg w-96"
                     >
-                      <h2 className="text-xl font-bold mb-4">{editingUnit ? "Edit Unit" : "Add Unit"}</h2>
+                      <h2 className="text-xl font-bold mb-4">{editingUnit ? t("Edit Unit") : t("Add Unit")}</h2>
                       <Input
-                        placeholder="Name (Uz)"
+                        placeholder={t("Name (UZ)")}
                         value={nameUz}
                         onChange={(e) => setNameUz(e.target.value)}
                         className="mb-4"
                       />
                       <Input
-                        placeholder="Name (Ru)"
+                        placeholder={t("Name (RU)")}
                         value={nameRu}
                         onChange={(e) => setNameRu(e.target.value)}
                         className="mb-4"
                       />
                       <div className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={handleFormClose}>Cancel</Button>
-                        <Button className="bg-green-600 hover:bg-green-700" onClick={handleFormSubmit}>Save</Button>
+                        <Button variant="outline" onClick={handleFormClose}>{t("cancel")}</Button>
+                        <Button className="bg-green-600 hover:bg-green-700" onClick={handleFormSubmit}>{t("save")}</Button>
                       </div>
                     </motion.div>
                   </motion.div>

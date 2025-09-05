@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Edit, Trash2, Eye } from "lucide-react"
 import type { Category } from "@/types/product"
+import { useLanguage } from "@/contexts/language-context"
 
 interface CategoryCardProps {
   category: Category
@@ -13,7 +14,11 @@ interface CategoryCardProps {
   onViewProducts: (category: Category) => void
 }
 
+
+
 export function CategoryCard({ category, productCount, onEdit, onDelete, onViewProducts }: CategoryCardProps) {
+
+  const { t } = useLanguage()
   return (
     <Card className="group hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
@@ -35,12 +40,9 @@ export function CategoryCard({ category, productCount, onEdit, onDelete, onViewP
           </div>
         )}
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => onViewProducts(category)} className="flex-1">
-            <Eye className="h-4 w-4 mr-2" />
-            View Products
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => onEdit(category)}>
-            <Edit className="h-4 w-4" />
+          <Button size="sm" variant="outline" className="flex-1" onClick={() => onEdit(category)}>
+            <Edit className="h-4 w-4 mr-2" />
+            {t('categoriyEdit')}
           </Button>
           <Button
             size="sm"

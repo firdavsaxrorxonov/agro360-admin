@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Edit, Trash2, Clock } from "lucide-react"
 import type { User } from "@/types/order"
+import { useLanguage } from "@/contexts/language-context"
+
 
 interface UserCardProps {
   user: User
@@ -14,6 +16,8 @@ interface UserCardProps {
 }
 
 export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
+  const { t } = useLanguage()
+
   const getRoleColor = (role: User["role"]) => {
     switch (role) {
       case "admin":
@@ -43,27 +47,33 @@ export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
             </Avatar>
             <div>
               <h3 className="font-semibold">{user.username}</h3>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
+              <p className="text-sm text-muted-foreground">{user.email || t("noEmail")}</p>
             </div>
           </div>
-          <Badge className={getRoleColor(user.role)}>{user.role}</Badge>
+          <Badge className={getRoleColor(user.role)}>
+            {user.role === "admin" ? t("Admin") : user.role === "user" ? t("User") : user.role}
+          </Badge>
         </div>
       </CardHeader>
+
       <CardContent className="space-y-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
-          <span>Joined {user.date_joined}</span>
+          <span>
+            {t("Joined")} {new Date(user.date_joined).toLocaleDateString()}
+          </span>
         </div>
 
         {user.lastLogin && (
           <div className="text-sm text-muted-foreground">
-            Last login: {new Date(user.lastLogin).toLocaleDateString()}
+            {t("Last login")}: {new Date(user.lastLogin).toLocaleDateString()}
           </div>
         )}
+
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={() => onEdit(user)} className="flex-1">
             <Edit className="h-4 w-4 mr-2" />
-            Edit
+            {t("edit")}
           </Button>
           <Button
             size="sm"

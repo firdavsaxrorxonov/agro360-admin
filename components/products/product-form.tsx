@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import axios from "axios"
 import type { Category } from "@/types/product"
-import { useLanguage } from "@/contexts/language-context" // <-- qo‘shildi
+import { useLanguage } from "@/contexts/language-context"
 
 interface Unit {
   id: string
@@ -39,12 +39,13 @@ interface ProductFormProps {
     tg_id?: string
     code?: string
     article?: string
+    quantity_left?: number
   } | null
   onSuccess?: () => void
 }
 
 export function ProductForm({ isOpen, onClose, categories, units, editingProduct, onSuccess }: ProductFormProps) {
-  const { t } = useLanguage() // <-- qo‘shildi
+  const { t } = useLanguage()
 
   const [formData, setFormData] = useState({
     name_uz: "",
@@ -57,6 +58,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
     tg_id: "",
     code: "",
     article: "",
+    quantity_left: "",
     imageFile: undefined as File | undefined,
   })
 
@@ -65,11 +67,10 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const token = localStorage.getItem("agroAdminToken")
-        const { data } = await axios.get('https://agro.felixits.uz/api/v1/orders/supplier/')
+        const { data } = await axios.get("https://agro.felixits.uz/api/v1/orders/supplier/")
         setSuppliers(data)
       } catch (err) {
-        console.error(t("Failed to fetch suppliers") + ":", err) // <-- tarjima qo‘shildi
+        console.error(t("Failed to fetch suppliers") + ":", err)
       }
     }
     fetchSuppliers()
@@ -88,6 +89,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
         tg_id: editingProduct.tg_id || "",
         code: editingProduct.code || "",
         article: editingProduct.article || "",
+        quantity_left: editingProduct.quantity_left?.toString() || "",
         imageFile: undefined,
       })
     } else if (units.length > 0 && categories.length > 0) {
@@ -123,6 +125,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
     fd.append("tg_id", formData.tg_id)
     fd.append("code", formData.code)
     fd.append("article", formData.article)
+    fd.append("quantity_left", formData.quantity_left) // ✅ Qo‘shildi
     if (formData.imageFile) fd.append("image", formData.imageFile)
 
     try {
@@ -160,6 +163,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Names */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>{t("Name (UZ)")}</Label>
@@ -171,6 +175,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
             </div>
           </div>
 
+          {/* Price & Quantity */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>{t("Price")}</Label>
@@ -181,32 +186,37 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
               />
             </div>
             <div>
-              <Label>{t("Category")}</Label>
-              {categories.length > 0 ? (
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("Select category")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id.toString()}>
-                        {cat.nameUz}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="text-gray-500">{t("Loading categories...")}</div>
-              )}
+              <Label>{t("quantity_Left")}</Label> {/* ✅ Qo‘shildi */}
+              <Input
+                type="number"
+                value={formData.quantity_left}
+                onChange={(e) => setFormData({ ...formData, quantity_left: e.target.value })}
+              />
             </div>
           </div>
 
-          <div>
-            <Label>{t("Unit")}</Label>
-            {units.length > 0 ? (
+          {/* Category & Unit */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>{t("Category")}</Label>
+              <Select
+                value={formData.category}
+                onValueChange={(value) => setFormData({ ...formData, category: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("Select category")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                      {cat.nameUz}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{t("Unit")}</Label>
               <Select value={formData.unity} onValueChange={(value) => setFormData({ ...formData, unity: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder={t("Select unit")} />
@@ -219,31 +229,27 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
                   ))}
                 </SelectContent>
               </Select>
-            ) : (
-              <div className="text-gray-500">{t("Loading units...")}</div>
-            )}
+            </div>
           </div>
 
+          {/* Telegram ID */}
           <div>
             <Label>{t("Telegram ID")}</Label>
-            {suppliers.length > 0 ? (
-              <Select value={formData.tg_id} onValueChange={(value) => setFormData({ ...formData, tg_id: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t("Select Telegram ID")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {suppliers.map((s) => (
-                    <SelectItem key={s.id} value={s.tg_id}>
-                      {s.full_name} ({s.tg_id})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <div className="text-gray-500">{t("Loading suppliers...")}</div>
-            )}
+            <Select value={formData.tg_id} onValueChange={(value) => setFormData({ ...formData, tg_id: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("Select Telegram ID")} />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers.map((s) => (
+                  <SelectItem key={s.id} value={s.tg_id}>
+                    {s.full_name} ({s.tg_id})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
+          {/* Code & Article */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>{t("Code")}</Label>
@@ -255,6 +261,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
             </div>
           </div>
 
+          {/* Descriptions */}
           <div>
             <Label>{t("Description (UZ)")}</Label>
             <Textarea
@@ -270,11 +277,13 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
             />
           </div>
 
+          {/* Image */}
           <div>
             <Label>{t("Image")}</Label>
             <Input type="file" accept="image/*" onChange={handleImageChange} />
           </div>
 
+          {/* Buttons */}
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
               {t("cancel")}

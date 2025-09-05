@@ -13,10 +13,13 @@ import { ProductTable } from "@/components/products/product-table"
 import { ProductForm } from "@/components/products/product-form"
 import { Pagination } from "@/components/products/pagination"
 import type { Product, Category } from "@/types/product"
+import { useLanguage } from "@/contexts/language-context"
 
 const ITEMS_PER_PAGE = 20
 
 export default function ProductsPage() {
+  const { language, t } = useLanguage()
+
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [units, setUnits] = useState<{ id: string; name_uz: string; name_ru: string }[]>([])
@@ -30,8 +33,10 @@ export default function ProductsPage() {
   const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
   const token = typeof window !== "undefined" ? localStorage.getItem("agroAdminToken") : null
 
+  // Axios instansiyasi
   const api = axios.create({ baseURL })
   if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`
+  api.defaults.headers.common["Accept-Language"] = language // ✅ Accept-Language qo‘shildi
 
   // Fetch categories & units
   const fetchCategoriesAndUnits = async () => {
@@ -58,7 +63,7 @@ export default function ProductsPage() {
       )
     } catch (error) {
       console.error("Failed to fetch categories or units:", error)
-      alert("Error fetching categories or units. Check your API URL or server.")
+      alert(t("Error") + ": " + t("Failed to fetch suppliers"))
     }
   }
 
@@ -75,11 +80,12 @@ export default function ProductsPage() {
           tg_id: p.tg_id || "",
           code: p.code || "",
           article: p.article || "",
+          quantity_left: p.quantity_left || "",
         }))
       )
     } catch (error) {
       console.error("Failed to fetch products:", error)
-      alert("Error fetching products. Check your API URL or server.")
+      alert(t("Error") + ": " + t("Failed to fetch suppliers"))
     } finally {
       setLoading(false)
     }
@@ -88,7 +94,7 @@ export default function ProductsPage() {
   useEffect(() => {
     fetchCategoriesAndUnits()
     fetchProducts()
-  }, [])
+  }, [language]) // ✅ language o‘zgarganda ham yangilanadi
 
   const filteredProducts = useMemo(() => {
     let temp = products
@@ -111,18 +117,25 @@ export default function ProductsPage() {
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
 
-  const handleDeleteProduct = async (id: string) => {
-    try {
-      await api.delete(`/product/${id}/delete/`)
-      await fetchProducts()
-    } catch (error) {
-      console.error("Failed to delete product:", error)
-    }
-  }
-
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product)
     setIsFormOpen(true)
+  }
+
+  const handleUpdateProduct = (updatedProduct: Product) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+    )
+  }
+
+  const handleDeleteProduct = async (id: string) => {
+    try {
+      await api.delete(`/product/${id}/delete/`)
+      setProducts((prev) => prev.filter((p) => p.id !== id))
+    } catch (error) {
+      console.error("Failed to delete product:", error)
+      alert(t("Error") + ": " + t("Failed to fetch suppliers"))
+    }
   }
 
   return (
@@ -131,8 +144,8 @@ export default function ProductsPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Products</h1>
-              <p className="text-muted-foreground">Manage your product inventory</p>
+              <h1 className="text-3xl font-bold">{t("products")}</h1>
+              <p className="text-muted-foreground">{t("welcomeMessage")}</p>
             </div>
             <Button
               onClick={() => {
@@ -141,14 +154,14 @@ export default function ProductsPage() {
               }}
               className="bg-green-600 hover:bg-green-700"
             >
-              <Plus className="h-4 w-4 mr-2" /> Add Product
+              <Plus className="h-4 w-4 mr-2" /> {t("create")}
             </Button>
           </div>
 
           {/* Search & Category Filter */}
           <div className="flex gap-4 flex-wrap items-center">
             <Input
-              placeholder="Search by name..."
+              placeholder={t("products")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-xs"
@@ -157,13 +170,13 @@ export default function ProductsPage() {
             <div className="w-64">
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Filter by category" />
+                  <SelectValue placeholder={t("Select category")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="all">{t("categoriesTitle")}</SelectItem>
                   {categories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.nameUz}
+                      {language === "uz" ? c.nameUz : c.nameRu}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -181,6 +194,7 @@ export default function ProductsPage() {
                 products={paginatedProducts}
                 onEditProduct={handleEditProduct}
                 onDeleteProduct={handleDeleteProduct}
+                onUpdateProduct={handleUpdateProduct}
                 currentPage={currentPage}
                 itemsPerPage={ITEMS_PER_PAGE}
                 units={units}
@@ -188,7 +202,11 @@ export default function ProductsPage() {
               />
 
               {totalPages > 1 && (
-                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
               )}
 
               <ProductForm

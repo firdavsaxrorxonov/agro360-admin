@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import axios from "axios"
 import type { User } from "@/types/order"
+import { useLanguage } from "@/contexts/language-context"
 
 interface UserFormProps {
   isOpen: boolean
@@ -18,7 +19,8 @@ interface UserFormProps {
 }
 
 export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormProps) {
-  // Initial role & is_superuser
+  const { t } = useLanguage()
+
   const initialRole = editingUser?.role || "user"
   const initialIsSuperuser = initialRole === "admin"
 
@@ -36,7 +38,6 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
   const api = axios.create({ baseURL })
   if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`
 
-  // Sync formData with editingUser
   useEffect(() => {
     const role = editingUser?.role || "user"
     setFormData({
@@ -49,7 +50,6 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
     })
   }, [editingUser])
 
-  // Handle role change
   const handleRoleChange = (val: string) => {
     setFormData({
       ...formData,
@@ -58,11 +58,10 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
     })
   }
 
-  // Submit form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.username || (!editingUser && !formData.password)) {
-      alert("Username va password kiritilishi shart")
+      alert(t("Please fill all required fields"))
       return
     }
 
@@ -95,7 +94,7 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
       alert(
         error.response?.data?.username?.[0] ||
         error.response?.data?.password?.[0] ||
-        "Xatolik yuz berdi"
+        t("Error")
       )
     }
   }
@@ -104,30 +103,30 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{editingUser ? "Edit User" : "Create New User"}</DialogTitle>
+          <DialogTitle>{editingUser ? t("edit") : t("create")}</DialogTitle>
           <DialogDescription>
-            {editingUser ? "Update user info below." : "Fill in user info below."}
+            {editingUser ? t("Update the product information below.") : t("Fill in the product information below.")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="first_name">First Name</Label>
+            <Label htmlFor="first_name">{t("name")} (First)</Label>
             <Input
               id="first_name"
               value={formData.first_name}
               onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-              placeholder="First Name"
+              placeholder={t("name")}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="last_name">Last Name</Label>
+            <Label htmlFor="last_name">{t("name")} (Last)</Label>
             <Input
               id="last_name"
               value={formData.last_name}
               onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-              placeholder="Last Name"
+              placeholder={t("name")}
             />
           </div>
 
@@ -144,35 +143,35 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
 
           <div className="space-y-2">
             <Label htmlFor="password">
-              {editingUser ? "Password (leave empty if not changing)" : "Password"}
+              {editingUser ? t("Password (leave empty if not changing)") : t("Password")}
             </Label>
             <Input
               id="password"
               type="password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              placeholder={editingUser ? "Leave empty to keep current password" : "Password"}
+              placeholder={editingUser ? t("Leave empty to keep current password") : t("Password")}
               required={!editingUser}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
+            <Label htmlFor="role">{t("role")}</Label>
             <Select value={formData.role} onValueChange={handleRoleChange}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="user">{t("User")}</SelectItem>
+                <SelectItem value="admin">{t("Admin")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={onClose}>{t("cancel")}</Button>
             <Button type="submit" className="bg-green-600 hover:bg-green-700">
-              {editingUser ? "Update User" : "Create User"}
+              {editingUser ? t("update") : t("create")}
             </Button>
           </div>
         </form>

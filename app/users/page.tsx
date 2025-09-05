@@ -10,10 +10,13 @@ import axios from "axios"
 import { UserCard } from "@/components/users/user-card"
 import { UserForm } from "@/components/users/user-form"
 import type { User } from "@/types/order"
+import { useLanguage } from "@/contexts/language-context"
+
 
 const ITEMS_PER_PAGE = 10
 
 export default function UsersPage() {
+  const { t } = useLanguage()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -44,8 +47,6 @@ export default function UsersPage() {
       setLoading(false)
     }
   }
-
-
 
   useEffect(() => {
     fetchUsers()
@@ -117,8 +118,8 @@ export default function UsersPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Users</h1>
-              <p className="text-muted-foreground">Manage user accounts</p>
+              <h1 className="text-3xl font-bold">{t("allUsers")}</h1>
+              <p className="text-muted-foreground">{t("Manage your product inventory")}</p>
             </div>
             <Button
               onClick={() => {
@@ -127,21 +128,21 @@ export default function UsersPage() {
               }}
               className="bg-green-600 hover:bg-green-700"
             >
-              <Plus className="h-4 w-4 mr-2" /> Add User
+              <Plus className="h-4 w-4 mr-2" /> {t("create")}
             </Button>
           </div>
 
           {/* Role Filter */}
           <div className="flex items-center gap-4">
-            <label className="text-sm font-medium">Filter by Role:</label>
+            <label className="text-sm font-medium">{t("Filter_by_Role")}</label>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
               <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="all">{t("All")}</SelectItem>
+                <SelectItem value="admin">{t("Admin")}</SelectItem>
+                <SelectItem value="user">{t("User")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -167,7 +168,7 @@ export default function UsersPage() {
 
               {filteredUsers.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">No users found. Add a new user to get started.</p>
+                  <p className="text-muted-foreground">{t("No users found. Add a new user to get started.")}</p>
                 </div>
               )}
 

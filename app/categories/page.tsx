@@ -11,6 +11,7 @@ import { Plus, Loader2 } from "lucide-react"
 import axios from "axios"
 import { toast } from "sonner"
 import type { Category } from "@/types/product"
+import { useLanguage } from "@/contexts/language-context"
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -20,18 +21,15 @@ export default function CategoriesPage() {
   const [isProductsModalOpen, setIsProductsModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
 
+  const { lang, t } = useLanguage() // t endi funksiya: t('kalit')
+
   const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
   const imgBaseURL = process.env.NEXT_PUBLIC_API_ImgBASE_URL ?? ""
   const token =
     typeof window !== "undefined" ? localStorage.getItem("agroAdminToken") : null
-  const lang =
-    typeof window !== "undefined" ? localStorage.getItem("lang") || "uz" : "uz"
 
   const api = axios.create({ baseURL })
-
-  if (token) {
-    api.defaults.headers.common["Authorization"] = `Bearer ${token}`
-  }
+  if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`
   api.defaults.headers.common["Accept-Language"] = lang
 
   const fetchCategories = async () => {
@@ -55,7 +53,7 @@ export default function CategoriesPage() {
       }
     } catch (error) {
       console.error("Error fetching categories:", error)
-      toast.error("Failed to load categories")
+      toast.error(t("Loading categories..."))
     } finally {
       setLoading(false)
     }
@@ -66,33 +64,31 @@ export default function CategoriesPage() {
   }, [])
 
   const getCategoryName = (cat: Category) => (lang === "ru" ? cat.nameRu : cat.nameUz)
-  const getProductCount = (_categoryName: string) => 0
 
   const handleCreateCategory = async (formData: FormData) => {
     try {
       await api.post("/category/create/", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       })
-      toast.success("Category created successfully")
+      toast.success(t("addCategory"))
       fetchCategories()
     } catch (error) {
       console.error(error)
-      toast.error("Failed to create category")
+      toast.error(t("Please fill all required fields"))
     }
   }
 
-  // 🔹 PATCH rasm optional
   const handleUpdateCategory = async (formData: FormData) => {
     if (!editingCategory) return
     try {
       await api.patch(`/category/${editingCategory.id}/update/`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       })
-      toast.success("Category updated successfully")
+      toast.success(t("update"))
       fetchCategories()
-    } catch (error: any) {
-      console.error(error.response?.data || error)
-      toast.error("Failed to update category")
+    } catch (error) {
+      console.error(error)
+      toast.error(t("Please fill all required fields"))
     } finally {
       setEditingCategory(null)
     }
@@ -107,10 +103,10 @@ export default function CategoriesPage() {
     try {
       await api.delete(`/category/${id}/delete/`)
       setCategories((prev) => prev.filter((c) => c.id !== id))
-      toast.success("Category deleted")
+      toast.success(t("delete"))
     } catch (error) {
       console.error(error)
-      toast.error("Failed to delete category")
+      toast.error(t("Error"))
     }
   }
 
@@ -130,17 +126,15 @@ export default function CategoriesPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Categories</h1>
-              <p className="text-muted-foreground">
-                Manage your product categories
-              </p>
+              <h1 className="text-3xl font-bold">{t("categoriesTitle")}</h1>
+              <p className="text-muted-foreground">{t("categoriesSubtitle")}</p>
             </div>
             <Button
               onClick={() => setIsFormOpen(true)}
               className="bg-green-600 hover:bg-green-700"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Category
+              {t("addCategory")}
             </Button>
           </div>
 
@@ -153,11 +147,7 @@ export default function CategoriesPage() {
               {categories.map((category) => (
                 <CategoryCard
                   key={category.id}
-                  category={{
-                    ...category,
-                    nameUz: getCategoryName(category),
-                  }}
-                  productCount={getProductCount(getCategoryName(category))}
+                  category={{ ...category, nameUz: getCategoryName(category) }}
                   onEdit={handleEditCategory}
                   onDelete={() => handleDeleteCategory(category.id)}
                   onViewProducts={handleViewProducts}
@@ -165,11 +155,7 @@ export default function CategoriesPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                No categories found. Create your first category to get started.
-              </p>
-            </div>
+            <div className="text-center py-12">{t("noCategories")}</div>
           )}
 
           <CategoryForm
@@ -177,6 +163,7 @@ export default function CategoriesPage() {
             onClose={handleFormClose}
             onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory}
             editingCategory={editingCategory}
+            t={t} // form ichida ham t('kalit')
           />
 
           <CategoryProducts

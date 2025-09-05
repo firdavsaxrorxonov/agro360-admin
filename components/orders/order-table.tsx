@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Eye } from "lucide-react"
 import type { Order } from "@/types/order"
+import { useLanguage } from "@/contexts/language-context"
 
 interface OrderTableProps {
   orders: Order[]
@@ -12,17 +13,19 @@ interface OrderTableProps {
 }
 
 export function OrderTable({ orders, onViewOrder }: OrderTableProps) {
+  const { t } = useLanguage()
+
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Order ID</TableHead>
-            <TableHead>Customer</TableHead>
-            <TableHead>Items</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead>{t("orderId")}</TableHead>
+            <TableHead>{t("customerName")}</TableHead>
+            <TableHead>{t("items") || "Items"}</TableHead>
+            <TableHead>{t("total")}</TableHead>
+            <TableHead>{t("date")}</TableHead>
+            <TableHead>{t("actions") || "Actions"}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -35,7 +38,7 @@ export function OrderTable({ orders, onViewOrder }: OrderTableProps) {
                   <div className="text-sm text-muted-foreground">{order.customerEmail}</div>
                 </div>
               </TableCell>
-              <TableCell>{order.items.length} items</TableCell>
+              <TableCell>{order.items.length} {t("items") || "items"}</TableCell>
               <TableCell className="font-medium">${order.amount.toFixed(2)}</TableCell>
               <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
               <TableCell>

@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import type { Category } from "@/types/product"
+import { useLanguage } from "@/contexts/language-context"
 
 interface CategoryFormProps {
   isOpen: boolean
@@ -33,6 +34,7 @@ export function CategoryForm({
   })
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
+  const { t } = useLanguage() // 🔹 t() funksiyasini ishlatamiz
 
   useEffect(() => {
     if (editingCategory) {
@@ -58,18 +60,16 @@ export function CategoryForm({
       data.append("name_uz", formData.nameUz)
       data.append("name_ru", formData.nameRu)
 
-      // 🔹 image optional: agar tanlangan bo‘lsa append qilamiz
       if (imageFile) {
         data.append("image", imageFile)
       }
 
       await onSubmit(data)
-
       onClose()
       setFormData({ nameUz: "", nameRu: "", image: "" })
       setImageFile(null)
     } catch (error) {
-      console.error("Kategoriya saqlashda xato:", error)
+      console.error(t("Error"), error)
     } finally {
       setLoading(false)
     }
@@ -88,44 +88,44 @@ export function CategoryForm({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {editingCategory ? "Edit Category" : "Create New Category"}
+            {editingCategory ? t("update") : t("create")}
           </DialogTitle>
           <DialogDescription>
             {editingCategory
-              ? "Update the category information below."
-              : "Fill in the category information below."}
+              ? t("Update the product information below.")
+              : t("Fill in the product information below.")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="nameUz">Category Name (Uzbek)</Label>
+            <Label htmlFor="nameUz">{t("Name (UZ)")}</Label>
             <Input
               id="nameUz"
               value={formData.nameUz}
               onChange={(e) =>
                 setFormData({ ...formData, nameUz: e.target.value })
               }
-              placeholder="Enter category name in Uzbek"
+              placeholder={t("Name (UZ)")}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="nameRu">Category Name (Russian)</Label>
+            <Label htmlFor="nameRu">{t("Name (RU)")}</Label>
             <Input
               id="nameRu"
               value={formData.nameRu}
               onChange={(e) =>
                 setFormData({ ...formData, nameRu: e.target.value })
               }
-              placeholder="Enter category name in Russian"
+              placeholder={t("Name (RU)")}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="image">Category Image</Label>
+            <Label htmlFor="image">{t("Image")}</Label>
             <Input
               id="image"
               type="file"
@@ -136,7 +136,7 @@ export function CategoryForm({
               <div className="mt-2">
                 <img
                   src={formData.image}
-                  alt="Preview"
+                  alt={t("Image")}
                   className="w-full h-32 object-cover rounded border"
                 />
               </div>
@@ -145,7 +145,7 @@ export function CategoryForm({
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               type="submit"
@@ -153,10 +153,10 @@ export function CategoryForm({
               className="bg-green-600 hover:bg-green-700"
             >
               {loading
-                ? "Saving..."
+                ? t("Saving...")
                 : editingCategory
-                  ? "Update Category"
-                  : "Create Category"}
+                  ? t("update")
+                  : t("create")}
             </Button>
           </div>
         </form>
