@@ -42,7 +42,7 @@ export default function ProductsPage() {
   const fetchCategoriesAndUnits = async () => {
     try {
       const [catRes, unitRes] = await Promise.all([
-        api.get("/category/list/"),
+        api.get("/category/list/?page_size=150"),
         api.get("/unity/list/"),
       ])
 
