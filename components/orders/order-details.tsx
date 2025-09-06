@@ -62,8 +62,8 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
                   <TableRow key={index}>
                     <TableCell className="font-medium">{item.productName}</TableCell>
                     <TableCell>{item.quantity}</TableCell>
-                    <TableCell>${item.price.toFixed(2)}</TableCell>
-                    <TableCell>${(item.price * item.quantity).toFixed(2)}</TableCell>
+                    <TableCell>{item.price.toFixed(2)} UZS</TableCell>
+                    <TableCell>{(item.price * item.quantity).toFixed(2)} UZS</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
