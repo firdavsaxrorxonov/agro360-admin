@@ -40,6 +40,7 @@ interface ProductFormProps {
     code?: string
     article?: string
     quantity_left?: number
+    min_quantity?: number
   } | null
   onSuccess?: () => void
 }
@@ -59,6 +60,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
     code: "",
     article: "",
     quantity_left: "",
+    min_quantity: "", // ✅ yangi maydon
     imageFile: undefined as File | undefined,
   })
 
@@ -90,6 +92,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
         code: editingProduct.code || "",
         article: editingProduct.article || "",
         quantity_left: editingProduct.quantity_left?.toString() || "",
+        min_quantity: editingProduct.min_quantity?.toString() || "", // ✅ min_quantity
         imageFile: undefined,
       })
     } else if (units.length > 0 && categories.length > 0) {
@@ -125,7 +128,8 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
     fd.append("tg_id", formData.tg_id)
     fd.append("code", formData.code)
     fd.append("article", formData.article)
-    fd.append("quantity_left", formData.quantity_left) // ✅ Qo‘shildi
+    fd.append("quantity_left", formData.quantity_left)
+    fd.append("min_quantity", formData.min_quantity) // ✅ APIga yuborish
     if (formData.imageFile) fd.append("image", formData.imageFile)
 
     try {
@@ -175,22 +179,39 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
             </div>
           </div>
 
-          {/* Price & Quantity */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Price, Quantity & Min Quantity */}
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <Label>{t("Price")}</Label>
               <Input
                 type="number"
+                step="any"
                 value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, price: e.target.value.replace(",", ".") }) // ✅ vergulni nuqtaga
+                }
               />
             </div>
             <div>
-              <Label>{t("quantity_Left")}</Label> {/* ✅ Qo‘shildi */}
+              <Label>{t("quantity_Left")}</Label>
               <Input
                 type="number"
+                step="any"
                 value={formData.quantity_left}
-                onChange={(e) => setFormData({ ...formData, quantity_left: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, quantity_left: e.target.value.replace(",", ".") }) // ✅ vergulni nuqtaga
+                }
+              />
+            </div>
+            <div>
+              <Label>{t("min_Quantity")}</Label>
+              <Input
+                type="number"
+                step="any" // ✅ butun yoki kasr son
+                value={formData.min_quantity}
+                onChange={(e) =>
+                  setFormData({ ...formData, min_quantity: e.target.value.replace(",", ".") }) // ✅ vergulni nuqtaga
+                }
               />
             </div>
           </div>

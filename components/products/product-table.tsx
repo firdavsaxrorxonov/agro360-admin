@@ -111,7 +111,7 @@ export function ProductTable({
           </TableHeader>
           <TableBody>
             {products.map((product, index) => (
-              <TableRow key={product.id}>
+              <TableRow key={product.order_number}>
                 <TableCell className="font-medium">
                   {(currentPage - 1) * itemsPerPage + index + 1}
                 </TableCell>

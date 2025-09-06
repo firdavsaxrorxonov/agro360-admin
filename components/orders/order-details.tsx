@@ -58,12 +58,12 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {order.items.map((item, index) => (
-                  <TableRow key={index}>
+                {order.items.map((item, idx) => (
+                  <TableRow key={`${item.productId}-${idx}`}>
                     <TableCell className="font-medium">{item.productName}</TableCell>
                     <TableCell>{item.quantity}</TableCell>
                     <TableCell>{item.price} UZS</TableCell>
-                    <TableCell>{(item.price * item.quantity)} UZS</TableCell>
+                    <TableCell>{item.price * item.quantity} UZS</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -31,10 +31,11 @@ export function CategoryForm({
     nameUz: "",
     nameRu: "",
     image: "",
+    order: "", // 🔹 default bo‘sh
   })
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
-  const { t } = useLanguage() // 🔹 t() funksiyasini ishlatamiz
+  const { t } = useLanguage()
 
   useEffect(() => {
     if (editingCategory) {
@@ -42,10 +43,11 @@ export function CategoryForm({
         nameUz: editingCategory.nameUz || "",
         nameRu: editingCategory.nameRu || "",
         image: editingCategory.image || "",
+        order: editingCategory.order !== undefined ? String(editingCategory.order) : "", // 🔹 edit holatda order
       })
       setImageFile(null)
     } else {
-      setFormData({ nameUz: "", nameRu: "", image: "" })
+      setFormData({ nameUz: "", nameRu: "", image: "", order: "" })
       setImageFile(null)
     }
   }, [editingCategory])
@@ -60,13 +62,18 @@ export function CategoryForm({
       data.append("name_uz", formData.nameUz)
       data.append("name_ru", formData.nameRu)
 
+      // 🔹 faqat bo‘sh bo‘lmagan order qiymatini yuboramiz
+      if (formData.order !== "") {
+        data.append("order", formData.order)
+      }
+
       if (imageFile) {
         data.append("image", imageFile)
       }
 
       await onSubmit(data)
       onClose()
-      setFormData({ nameUz: "", nameRu: "", image: "" })
+      setFormData({ nameUz: "", nameRu: "", image: "", order: "" })
       setImageFile(null)
     } catch (error) {
       console.error(t("Error"), error)
@@ -121,6 +128,21 @@ export function CategoryForm({
               }
               placeholder={t("Name (RU)")}
               required
+            />
+          </div>
+
+          {/* 🔹 Order input */}
+          <div className="space-y-2">
+            <Label htmlFor="order">{t("Order")}</Label>
+            <Input
+              id="order"
+              type="number"
+              value={formData.order}
+              onChange={(e) =>
+                setFormData({ ...formData, order: e.target.value })
+              }
+              placeholder={t("Order")}
+              min={0}
             />
           </div>
 
