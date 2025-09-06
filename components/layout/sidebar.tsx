@@ -27,7 +27,7 @@ const navigation = [
   { name: "Products", href: "/products", icon: Package },
   { name: "Categories", href: "/categories", icon: FolderOpen },
   { name: "Units", href: "/unity", icon: Ruler },
-  { name: "Banner Upload", href: "/banners", icon: Image },
+  { name: "Banners", href: "/banners", icon: Image },
   { name: "Orders", href: "/orders", icon: ShoppingCart },
   { name: "Users", href: "/users", icon: Users },
 ]

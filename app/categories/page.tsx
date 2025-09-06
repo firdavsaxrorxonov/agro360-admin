@@ -35,7 +35,7 @@ export default function CategoriesPage() {
   const fetchCategories = async () => {
     try {
       setLoading(true)
-      const { data } = await api.get("/category/list/")
+      const { data } = await api.get("/category/list/?page_size=99")
       if (Array.isArray(data.results)) {
         const normalized = data.results.map((cat: any) => ({
           id: cat.id,
