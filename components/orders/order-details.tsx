@@ -25,9 +25,9 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>{t("orderDetails")} - #{order.id}</DialogTitle>
+          <DialogTitle>{t("orderDetails")} - {order.customerName}</DialogTitle>
           <DialogDescription>{t("completeOrderInfo")}</DialogDescription>
         </DialogHeader>
 
