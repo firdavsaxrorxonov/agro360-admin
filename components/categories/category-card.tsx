@@ -14,22 +14,29 @@ interface CategoryCardProps {
   onViewProducts: (category: Category) => void
 }
 
-export function CategoryCard({ category, productCount, onEdit, onDelete }: CategoryCardProps) {
+export function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) {
   const { t } = useLanguage()
 
   return (
-    <Card className="group hover:shadow-md transition-shadow w-[250px] h-[320px] mx-auto">
+    <Card
+      className="group hover:shadow-md transition-shadow
+      w-full max-w-[200px] sm:max-w-[220px] md:max-w-[250px]
+      h-[260px] sm:h-[280px] md:h-[300px] mx-auto"
+    >
+      {/* 🔹 Header with smaller padding */}
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <h3 className="font-semibold text-lg">{category.nameUz}</h3>
-            <p className="text-sm text-muted-foreground">{category.nameRu}</p>
+            <h3 className="font-semibold text-sm sm:text-base">{category.nameUz}</h3>
+            <p className="text-xs text-muted-foreground">{category.nameRu}</p>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+
+      {/* 🔹 Content with smaller padding */}
+      <CardContent className="p-2 space-y-3">
         {category.image && (
-          <div className="rounded-md overflow-hidden bg-muted h-[120px]">
+          <div className="rounded-md overflow-hidden bg-muted h-[90px] sm:h-[110px]">
             <img
               src={category.image || "/placeholder.svg?height=120&width=200"}
               alt={category.nameUz}
@@ -37,9 +44,15 @@ export function CategoryCard({ category, productCount, onEdit, onDelete }: Categ
             />
           </div>
         )}
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" className="flex-1" onClick={() => onEdit(category)}>
-            <Edit className="h-4 w-4 mr-2" />
+
+        <div className="flex items-center gap-1">
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 text-xs sm:text-sm"
+            onClick={() => onEdit(category)}
+          >
+            <Edit className="h-3 w-2 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             {t("categoriyEdit")}
           </Button>
           <Button
@@ -48,7 +61,7 @@ export function CategoryCard({ category, productCount, onEdit, onDelete }: Categ
             onClick={() => onDelete(category.id)}
             className="text-red-600 hover:text-red-700"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
         </div>
       </CardContent>

@@ -162,7 +162,7 @@ export default function CategoriesPage() {
               <Loader2 className="h-8 w-8 animate-spin text-green-600" />
             </div>
           ) : filteredCategories.length > 0 ? (
-            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {filteredCategories.map((category) => (
                 <CategoryCard
                   key={category.id}
