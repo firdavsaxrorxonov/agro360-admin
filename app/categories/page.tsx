@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react"
 import { Layout } from "@/components/layout/layout"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input" // 🔹 Input import qilindi
+import { Input } from "@/components/ui/input"
 import { CategoryCard } from "@/components/categories/category-card"
 import { CategoryForm } from "@/components/categories/category-form"
 import { CategoryProducts } from "@/components/categories/category-products"
@@ -42,7 +42,7 @@ export default function CategoriesPage() {
           id: cat.id,
           nameUz: cat.name_uz,
           nameRu: cat.name_ru,
-          order: cat.order ?? 0, // 🔹 order qiymati
+          order: cat.order ?? 0,
           image: cat.image
             ? cat.image.startsWith("http")
               ? cat.image
@@ -50,9 +50,7 @@ export default function CategoriesPage() {
             : "/placeholder.svg",
         }))
 
-        // 🔹 order bo‘yicha tartib
         normalized.sort((a, b) => a.order - b.order)
-
         setCategories(normalized)
       } else {
         setCategories([])
@@ -164,7 +162,7 @@ export default function CategoriesPage() {
               <Loader2 className="h-8 w-8 animate-spin text-green-600" />
             </div>
           ) : filteredCategories.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {filteredCategories.map((category) => (
                 <CategoryCard
                   key={category.id}

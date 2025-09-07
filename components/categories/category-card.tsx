@@ -1,8 +1,8 @@
 "use client"
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Edit, Trash2, Eye } from "lucide-react"
+import { Edit, Trash2 } from "lucide-react"
 import type { Category } from "@/types/product"
 import { useLanguage } from "@/contexts/language-context"
 
@@ -14,13 +14,11 @@ interface CategoryCardProps {
   onViewProducts: (category: Category) => void
 }
 
-
-
-export function CategoryCard({ category, productCount, onEdit, onDelete, onViewProducts }: CategoryCardProps) {
-
+export function CategoryCard({ category, productCount, onEdit, onDelete }: CategoryCardProps) {
   const { t } = useLanguage()
+
   return (
-    <Card className="group hover:shadow-md transition-shadow">
+    <Card className="group hover:shadow-md transition-shadow w-[250px] h-[320px] mx-auto">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -31,7 +29,7 @@ export function CategoryCard({ category, productCount, onEdit, onDelete, onViewP
       </CardHeader>
       <CardContent className="space-y-4">
         {category.image && (
-          <div className="aspect-video rounded-md overflow-hidden bg-muted">
+          <div className="rounded-md overflow-hidden bg-muted h-[120px]">
             <img
               src={category.image || "/placeholder.svg?height=120&width=200"}
               alt={category.nameUz}
@@ -42,7 +40,7 @@ export function CategoryCard({ category, productCount, onEdit, onDelete, onViewP
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" className="flex-1" onClick={() => onEdit(category)}>
             <Edit className="h-4 w-4 mr-2" />
-            {t('categoriyEdit')}
+            {t("categoriyEdit")}
           </Button>
           <Button
             size="sm"
