@@ -111,7 +111,6 @@ export default function OrdersPage() {
           [t("product")]: item.productName,
           [t("quantity")]: item.quantity,
           [t("price")]: item.price,
-          [t("total")]: item.quantity * item.price,
           [t("date")]: new Date(order.createdAt).toLocaleDateString(),
         });
       });
