@@ -98,7 +98,6 @@ export default function OrdersPage() {
     });
   }, [orders, selectedUser, selectedDate]);
 
-
   const exportToExcel = () => {
     if (!filteredOrders.length) return;
 
@@ -106,7 +105,7 @@ export default function OrdersPage() {
     filteredOrders.forEach((order) => {
       order.items.forEach((item) => {
         rows.push({
-          [t("order_number")]: order.order_number,
+          [t("Buyurtma raqami")]: order.order_number,
           [t("customerName")]: order.customerName,
           [t("customerEmail")]: order.customerEmail,
           [t("product")]: item.productName,
@@ -123,7 +122,16 @@ export default function OrdersPage() {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(data, `orders_${selectedDate || "all_dates"}.xlsx`);
+
+    // Sana formatlash
+    const formattedDate = selectedDate
+      ? new Date(selectedDate).toLocaleDateString("uz-UZ")
+      : "";
+
+    // Fayl nomi "buyurtmalar" + sana bo'lsin
+    const fileName = `Buyurtmalar${formattedDate}.xlsx`;
+
+    saveAs(data, fileName);
   };
 
   // Unique users for select
