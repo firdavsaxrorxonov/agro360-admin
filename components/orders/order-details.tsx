@@ -8,7 +8,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { Order } from "@/types/order";
 import { useLanguage } from "@/contexts/language-context";
 
@@ -25,9 +32,11 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{t("orderDetails")} - {order.customerName}</DialogTitle>
+          <DialogTitle>
+            {t("orderDetails")} - {order.customerName}
+          </DialogTitle>
           <DialogDescription>{t("completeOrderInfo")}</DialogDescription>
         </DialogHeader>
 
@@ -37,10 +46,12 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
             <h3 className="font-semibold mb-2">{t("customerInformation")}</h3>
             <div className="space-y-1 text-sm">
               <div>
-                <span className="font-medium">{t("name")}:</span> {order.customerName}
+                <span className="font-medium">{t("name")}:</span>{" "}
+                {order.customerName}
               </div>
               <div>
-                <span className="font-medium">{t("email")}:</span> {order.customerEmail}
+                <span className="font-medium">{t("email")}:</span>{" "}
+                {order.customerEmail}
               </div>
             </div>
           </div>
@@ -60,10 +71,12 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
               <TableBody>
                 {order.items.map((item, idx) => (
                   <TableRow key={`${item.productId}-${idx}`}>
-                    <TableCell className="font-medium">{item.productName}</TableCell>
+                    <TableCell className="font-medium">
+                      {item.productName}
+                    </TableCell>
                     <TableCell>{item.quantity}</TableCell>
+                    <TableCell>{item.productPrice} UZS</TableCell>
                     <TableCell>{item.price} UZS</TableCell>
-                    <TableCell>{item.price * item.quantity} UZS</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

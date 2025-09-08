@@ -34,7 +34,7 @@ export default function OrdersPage() {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
-  // Buyurtmalarni olish (server-side)
+  // Buyurtmalarni olish
   const fetchOrders = async (page: number = 1) => {
     try {
       const params: any = { page, page_size: itemsPerPage };
@@ -57,7 +57,8 @@ export default function OrdersPage() {
           productId: item.product.id,
           productName: item.product.name_uz,
           quantity: item.quantity,
-          price: item.price,
+          price: item.price, // buyurtmadagi narx
+          productPrice: item.product.price, // productning o‘zidagi narx
         })),
       }));
 
@@ -73,7 +74,6 @@ export default function OrdersPage() {
     fetchOrders(currentPage);
   }, []);
 
-  // Filter o'zgarganda sahifa 1 ga qaytariladi
   useEffect(() => {
     setCurrentPage(1);
     fetchOrders(1);
@@ -92,12 +92,17 @@ export default function OrdersPage() {
   // Client-side filter orders by selectedUser
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
-      const matchesUser = selectedUser === "all" || order.customerName === selectedUser;
-      const matchesDate = !selectedDate || new Date(order.createdAt).toLocaleDateString() === new Date(selectedDate).toLocaleDateString();
+      const matchesUser =
+        selectedUser === "all" || order.customerName === selectedUser;
+      const matchesDate =
+        !selectedDate ||
+        new Date(order.createdAt).toLocaleDateString() ===
+        new Date(selectedDate).toLocaleDateString();
       return matchesUser && matchesDate;
     });
   }, [orders, selectedUser, selectedDate]);
 
+  // Excel eksport
   const exportToExcel = () => {
     if (!filteredOrders.length) return;
 
@@ -110,9 +115,20 @@ export default function OrdersPage() {
           [t("customerEmail")]: order.customerEmail,
           [t("product")]: item.productName,
           [t("quantity")]: item.quantity,
-          [t("price")]: item.price,
-          [t("date")]: new Date(order.createdAt).toLocaleDateString(),
+          [t("price")]: item.productPrice, // productdagi narx
+          [t("total")]: item.price, // buyurtmadagi narx
+          [t("date")]: new Date(order.createdAt).toLocaleDateString("uz-UZ", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }),
+          [t("time")]: new Date(order.createdAt).toLocaleTimeString("uz-UZ", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          }),
         });
+
       });
     });
 
@@ -122,18 +138,14 @@ export default function OrdersPage() {
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
 
-    // Sana formatlash
     const formattedDate = selectedDate
       ? new Date(selectedDate).toLocaleDateString("uz-UZ")
       : "";
-
-    // Fayl nomi "buyurtmalar" + sana bo'lsin
     const fileName = `Buyurtmalar${formattedDate}.xlsx`;
 
     saveAs(data, fileName);
   };
 
-  // Unique users for select
   const uniqueUsers = Array.from(new Set(orders.map((o) => o.customerName)));
 
   return (
@@ -176,7 +188,10 @@ export default function OrdersPage() {
 
           {/* Pagination */}
           <div className="flex justify-center items-center gap-2 mt-4">
-            <Button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
+            <Button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
               {"<"}
             </Button>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (

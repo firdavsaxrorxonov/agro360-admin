@@ -1,3 +1,4 @@
+// OrderTable.tsx
 "use client";
 
 import { useState } from "react";
@@ -32,7 +33,12 @@ export function OrderTable({
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t("Are you sure you want to delete this order?") || "Delete order?")) return;
+    if (
+      !confirm(
+        t("Are you sure you want to delete this order?") || "Delete order?"
+      )
+    )
+      return;
 
     try {
       setLoadingId(id);
@@ -62,15 +68,19 @@ export function OrderTable({
 
     order.items.forEach((item) => {
       rows.push({
+        [t("orderNumber")]: order.order_number,
         [t("customerName")]: order.customerName,
         [t("customerEmail")]: order.customerEmail,
         [t("product")]: item.productName,
         [t("quantity")]: item.quantity,
-        [t("price")]: item.price,
-        [t("date")]: new Date(order.createdAt).toLocaleString("uz-UZ", {
+        [t("price")]: item.productPrice, // productdagi narx
+        [t("total")]: item.price, // buyurtmadagi narx
+        [t("date")]: new Date(order.createdAt).toLocaleDateString("uz-UZ", {
           year: "numeric",
           month: "2-digit",
           day: "2-digit",
+        }),
+        [t("time")]: new Date(order.createdAt).toLocaleTimeString("uz-UZ", {
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
