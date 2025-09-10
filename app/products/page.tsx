@@ -1,4 +1,3 @@
-// app/products/page.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -21,8 +20,7 @@ const ITEMS_PER_PAGE = 10
 export default function ProductsPage() {
   const { language, t } = useLanguage()
 
-  const [allProducts, setAllProducts] = useState<Product[]>([]) // API dan kelganlar
-  const [products, setProducts] = useState<Product[]>([]) // filterlanganlar
+  const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [units, setUnits] = useState<{ id: string; name_uz: string; name_ru: string }[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
@@ -69,13 +67,22 @@ export default function ProductsPage() {
     }
   }
 
-  // 📌 Serverdan mahsulotlarni olish (faqat pagination uchun)
+  // 📌 Serverdan mahsulotlarni olish (pagination + search + category)
   const fetchProducts = async () => {
     try {
       setLoading(true)
+
       const params: any = {
         page: currentPage,
         page_size: ITEMS_PER_PAGE,
+      }
+
+      if (searchTerm.trim() !== "") {
+        params.search = searchTerm
+      }
+
+      if (selectedCategory !== "all") {
+        params.category = selectedCategory
       }
 
       const { data } = await api.get("/product/list/", { params })
@@ -90,7 +97,7 @@ export default function ProductsPage() {
         quantity_left: p.quantity_left || "",
       }))
 
-      setAllProducts(mapped) // 🔑 API dan kelganlar
+      setProducts(mapped)
       setTotalPages(data.total_pages || 1)
     } catch (error) {
       console.error("Failed to fetch products:", error)
@@ -100,36 +107,15 @@ export default function ProductsPage() {
     }
   }
 
-  // 📌 Local filter: search va category
-  useEffect(() => {
-    let filtered = [...allProducts]
-
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter((p) => p.category === selectedCategory)
-    }
-
-    if (searchTerm.trim() !== "") {
-      const term = searchTerm.toLowerCase()
-      filtered = filtered.filter(
-        (p) =>
-          p.name_uz?.toLowerCase().includes(term) ||
-          p.name_ru?.toLowerCase().includes(term) ||
-          p.code?.toLowerCase().includes(term) ||
-          p.article?.toLowerCase().includes(term)
-      )
-    }
-
-    setProducts(filtered)
-  }, [allProducts, searchTerm, selectedCategory])
-
   // 📌 Effektlar
   useEffect(() => {
     fetchCategoriesAndUnits()
   }, [language])
 
+  // 🔑 Har safar search, category, page yoki language o‘zgarsa → API chaqiriladi
   useEffect(() => {
     fetchProducts()
-  }, [language, currentPage]) // 🔑 search/filter emas, faqat pagination
+  }, [language, currentPage, searchTerm, selectedCategory])
 
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product)
@@ -137,7 +123,7 @@ export default function ProductsPage() {
   }
 
   const handleUpdateProduct = (updatedProduct: Product) => {
-    setAllProducts((prev) =>
+    setProducts((prev) =>
       prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
     )
   }
@@ -145,7 +131,7 @@ export default function ProductsPage() {
   const handleDeleteProduct = async (id: string) => {
     try {
       await api.delete(`/product/${id}/delete/`)
-      setAllProducts((prev) => prev.filter((p) => p.id !== id))
+      setProducts((prev) => prev.filter((p) => p.id !== id))
     } catch (error) {
       console.error("Failed to delete product:", error)
       alert(t("Error") + ": " + t("Failed to fetch suppliers"))
@@ -179,7 +165,7 @@ export default function ProductsPage() {
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value)
-                setCurrentPage(1) // 🔑 yangi qidiruvda page 1
+                setCurrentPage(1) // 🔑 yangi qidiruvda page 1 dan boshlanadi
               }}
               className="max-w-xs"
             />
@@ -189,7 +175,7 @@ export default function ProductsPage() {
                 value={selectedCategory}
                 onValueChange={(val) => {
                   setSelectedCategory(val)
-                  setCurrentPage(1) // 🔑 yangi filterda page 1
+                  setCurrentPage(1) // 🔑 filter o‘zgarsa ham 1-sahifadan boshlanadi
                 }}
               >
                 <SelectTrigger>
