@@ -81,6 +81,7 @@ export default function ProductsPage() {
         params.search = searchTerm
       }
 
+      // ✅ kategoriya "all" bo‘lmasa, backendga yuboramiz
       if (selectedCategory !== "all") {
         params.category = selectedCategory
       }
@@ -106,6 +107,7 @@ export default function ProductsPage() {
       setLoading(false)
     }
   }
+
 
   // 📌 Effektlar
   useEffect(() => {
