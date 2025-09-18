@@ -56,11 +56,11 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
     unity: "",
     description_uz: "",
     description_ru: "",
-    tg_id: "",
+    tg_id: "", // ✅ optional
     code: "",
     article: "",
     quantity_left: "",
-    min_quantity: "", // ✅ yangi maydon
+    min_quantity: "",
     imageFile: undefined as File | undefined,
   })
 
@@ -88,11 +88,11 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
         unity: editingProduct.unity || (units[0]?.id || ""),
         description_uz: editingProduct.description_uz || "",
         description_ru: editingProduct.description_ru || "",
-        tg_id: editingProduct.tg_id || "",
+        tg_id: editingProduct.tg_id || "", // ✅ optional
         code: editingProduct.code || "",
         article: editingProduct.article || "",
         quantity_left: editingProduct.quantity_left?.toString() || "",
-        min_quantity: editingProduct.min_quantity?.toString() || "", // ✅ min_quantity
+        min_quantity: editingProduct.min_quantity?.toString() || "",
         imageFile: undefined,
       })
     } else if (units.length > 0 && categories.length > 0) {
@@ -112,6 +112,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // ✅ faqat asosiy majburiy maydonlar tekshiriladi
     if (!formData.name_uz || !formData.name_ru || !formData.price || !formData.category || !formData.unity) {
       alert(t("Please fill all required fields"))
       return
@@ -125,11 +126,17 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
     fd.append("unity", formData.unity)
     fd.append("description_uz", formData.description_uz)
     fd.append("description_ru", formData.description_ru)
-    fd.append("tg_id", formData.tg_id)
+
+    // ✅ Telegram ID faqat tanlangan bo‘lsa qo‘shiladi
+    if (formData.tg_id) {
+      fd.append("tg_id", formData.tg_id)
+    }
+
     fd.append("code", formData.code)
     fd.append("article", formData.article)
     fd.append("quantity_left", formData.quantity_left)
-    fd.append("min_quantity", formData.min_quantity) // ✅ APIga yuborish
+    fd.append("min_quantity", formData.min_quantity)
+
     if (formData.imageFile) fd.append("image", formData.imageFile)
 
     try {
@@ -188,7 +195,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
                 step="any"
                 value={formData.price}
                 onChange={(e) =>
-                  setFormData({ ...formData, price: e.target.value.replace(",", ".") }) // ✅ vergulni nuqtaga
+                  setFormData({ ...formData, price: e.target.value.replace(",", ".") })
                 }
               />
             </div>
@@ -199,7 +206,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
                 step="any"
                 value={formData.quantity_left}
                 onChange={(e) =>
-                  setFormData({ ...formData, quantity_left: e.target.value.replace(",", ".") }) // ✅ vergulni nuqtaga
+                  setFormData({ ...formData, quantity_left: e.target.value.replace(",", ".") })
                 }
               />
             </div>
@@ -207,10 +214,10 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
               <Label>{t("min_Quantity")}</Label>
               <Input
                 type="number"
-                step="any" // ✅ butun yoki kasr son
+                step="any"
                 value={formData.min_quantity}
                 onChange={(e) =>
-                  setFormData({ ...formData, min_quantity: e.target.value.replace(",", ".") }) // ✅ vergulni nuqtaga
+                  setFormData({ ...formData, min_quantity: e.target.value.replace(",", ".") })
                 }
               />
             </div>
@@ -253,9 +260,9 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
             </div>
           </div>
 
-          {/* Telegram ID */}
+          {/* Telegram ID (Optional) */}
           <div>
-            <Label>{t("Telegram ID")}</Label>
+            <Label>{t("Telegram ID")} ({t("optional")})</Label>
             <Select value={formData.tg_id} onValueChange={(value) => setFormData({ ...formData, tg_id: value })}>
               <SelectTrigger>
                 <SelectValue placeholder={t("Select Telegram ID")} />

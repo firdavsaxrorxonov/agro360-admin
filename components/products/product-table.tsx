@@ -106,6 +106,7 @@ export function ProductTable({
               <TableHead>{t("Code")}</TableHead>
               <TableHead>{t("Article")}</TableHead>
               <TableHead>{t("quantity_Left")}</TableHead>
+              <TableHead>{t("min_quantity")}</TableHead>
               <TableHead>{t("Actions")}</TableHead>
             </TableRow>
           </TableHeader>
@@ -150,6 +151,7 @@ export function ProductTable({
                 <TableCell>{product.code || "—"}</TableCell>
                 <TableCell>{product.article || "—"}</TableCell>
                 <TableCell>{product.quantity_left || "—"}</TableCell>
+                <TableCell>{product.min_quantity || "—"}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Button size="sm" variant="ghost" onClick={() => onEditProduct(product)}>
