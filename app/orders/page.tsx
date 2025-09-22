@@ -56,6 +56,7 @@ export default function OrdersPage() {
         items: o.items.map((item: any) => ({
           productId: item.product.id,
           productName: item.product.name_uz,
+          productCode: item.product.code,
           quantity: item.quantity,
           price: item.price, // buyurtmadagi narx
           productPrice: item.product.price, // productning o‘zidagi narx
@@ -110,9 +111,10 @@ export default function OrdersPage() {
     filteredOrders.forEach((order) => {
       order.items.forEach((item) => {
         rows.push({
-          [t("Buyurtma raqami")]: order.order_number,
+          [t("orderNumber")]: order.order_number,
           [t("customerName")]: order.customerName,
           [t("customerEmail")]: order.customerEmail,
+          [t("productCode")]: item.productCode, // 🔹 tovar kodi
           [t("product")]: item.productName,
           [t("quantity")]: item.quantity,
           [t("price")]: item.productPrice, // productdagi narx
@@ -128,7 +130,6 @@ export default function OrdersPage() {
             second: "2-digit",
           }),
         });
-
       });
     });
 
@@ -145,6 +146,7 @@ export default function OrdersPage() {
 
     saveAs(data, fileName);
   };
+
 
   const uniqueUsers = Array.from(new Set(orders.map((o) => o.customerName)));
 

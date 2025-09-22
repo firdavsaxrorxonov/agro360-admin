@@ -71,6 +71,7 @@ export function OrderTable({
         [t("orderNumber")]: order.order_number,
         [t("customerName")]: order.customerName,
         [t("customerEmail")]: order.customerEmail,
+        [t("productCode")]: item.productCode, // 🔹 tovar kodi
         [t("product")]: item.productName,
         [t("quantity")]: item.quantity,
         [t("price")]: item.productPrice, // productdagi narx
@@ -97,6 +98,7 @@ export function OrderTable({
     const fileName = `buyurtma_${order.order_number}_${order.customerName}.xlsx`;
     saveAs(data, fileName);
   };
+
 
   return (
     <div className="rounded-md border overflow-x-auto">
