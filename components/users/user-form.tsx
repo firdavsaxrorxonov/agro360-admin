@@ -25,8 +25,6 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
   const initialIsSuperuser = initialRole === "admin"
 
   const [formData, setFormData] = useState({
-    first_name: editingUser?.first_name || "",
-    last_name: editingUser?.last_name || "",
     username: editingUser?.username || "",
     password: "",
     role: initialRole,
@@ -41,8 +39,6 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
   useEffect(() => {
     const role = editingUser?.role || "user"
     setFormData({
-      first_name: editingUser?.first_name || "",
-      last_name: editingUser?.last_name || "",
       username: editingUser?.username || "",
       password: "",
       role: role,
@@ -66,8 +62,6 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
     }
 
     const payload: any = {
-      first_name: formData.first_name,
-      last_name: formData.last_name,
       username: formData.username,
       role: formData.role,
       is_superuser: formData.is_superuser,
@@ -87,7 +81,7 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
       }
 
       onSubmit(payload)
-      setFormData({ first_name: "", last_name: "", username: "", password: "", role: "user", is_superuser: false })
+      setFormData({ username: "", password: "", role: "user", is_superuser: false })
       onClose()
     } catch (error: any) {
       console.error("UserForm error:", error.response?.data || error)
@@ -105,31 +99,11 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
         <DialogHeader>
           <DialogTitle>{editingUser ? t("edit") : t("create")}</DialogTitle>
           <DialogDescription>
-            {editingUser ? t("Update the product information below.") : t("Fill in the product information below.")}
+            {editingUser ? t("Update user information below.") : t("Fill in user information below.")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="first_name">{t("name")} (First)</Label>
-            <Input
-              id="first_name"
-              value={formData.first_name}
-              onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-              placeholder={t("name")}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="last_name">{t("name")} (Last)</Label>
-            <Input
-              id="last_name"
-              value={formData.last_name}
-              onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-              placeholder={t("name")}
-            />
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="username">Username</Label>
             <Input

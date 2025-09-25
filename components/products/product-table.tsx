@@ -97,8 +97,7 @@ export function ProductTable({
           <TableHeader>
             <TableRow>
               <TableHead>№</TableHead>
-              <TableHead>{t("Name (UZ)")}</TableHead>
-              <TableHead>{t("Name (RU)")}</TableHead>
+              <TableHead>{t("Name")}</TableHead> {/* ✅ faqat bitta ustun */}
               <TableHead>{t("Price")}</TableHead>
               <TableHead>{t("Category")}</TableHead>
               <TableHead>{t("Unit")}</TableHead>
@@ -116,10 +115,13 @@ export function ProductTable({
                 <TableCell className="font-medium">
                   {(currentPage - 1) * itemsPerPage + index + 1}
                 </TableCell>
-                <TableCell>{product.name_uz}</TableCell>
-                <TableCell>{product.name_ru}</TableCell>
 
-                {/* Inline price edit */}
+                {/* ✅ faqat tanlangan tilni chiqaramiz */}
+                <TableCell>
+                  {language === "uz" ? product.name_uz : product.name_ru}
+                </TableCell>
+
+                {/* Price inline edit */}
                 <TableCell
                   onDoubleClick={() => handleDoubleClick(product)}
                   className="cursor-pointer"
@@ -142,7 +144,8 @@ export function ProductTable({
                     />
                   ) : (
                     product.price
-                  )} UZS
+                  )}{" "}
+                  UZS
                 </TableCell>
 
                 <TableCell>{getCategoryName(product.category)}</TableCell>
@@ -170,6 +173,7 @@ export function ProductTable({
               </TableRow>
             ))}
           </TableBody>
+
         </Table>
       </div>
     </div>
