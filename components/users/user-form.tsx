@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import axios from "axios"
 import type { User } from "@/types/order"
 import { useLanguage } from "@/contexts/language-context"
 
@@ -31,11 +30,6 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
     is_superuser: initialIsSuperuser,
   })
 
-  const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
-  const token = typeof window !== "undefined" ? localStorage.getItem("agroAdminToken") : null
-  const api = axios.create({ baseURL })
-  if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`
-
   useEffect(() => {
     const role = editingUser?.role || "user"
     setFormData({
@@ -54,83 +48,47 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
     })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.username || (!editingUser && !formData.password)) {
       alert(t("Please fill all required fields"))
       return
     }
-
-    const payload: any = {
-      username: formData.username,
-      role: formData.role,
-      is_superuser: formData.is_superuser,
-    }
-
-    if (!editingUser || formData.password) {
-      payload.password = formData.password
-    }
-
-    try {
-      if (editingUser) {
-        await api.patch(`/user/${editingUser.id}/update/`, payload)
-      } else {
-        payload.last_login = new Date().toISOString()
-        payload.date_joined = new Date().toISOString()
-        await api.post("/user/create/", payload)
-      }
-
-      onSubmit(payload)
-      setFormData({ username: "", password: "", role: "user", is_superuser: false })
-      onClose()
-    } catch (error: any) {
-      console.error("UserForm error:", error.response?.data || error)
-      alert(
-        error.response?.data?.username?.[0] ||
-        error.response?.data?.password?.[0] ||
-        t("Error")
-      )
-    }
+    onSubmit(formData)
+    setFormData({ username: "", password: "", role: "user", is_superuser: false })
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{editingUser ? t("edit") : t("create")}</DialogTitle>
-          <DialogDescription>
-            {editingUser ? t("Update user information below.") : t("Fill in user information below.")}
-          </DialogDescription>
+          <DialogTitle>{editingUser ? t("Edit User") : t("Create User")}</DialogTitle>
+          <DialogDescription>{t("Fill in the user details")}</DialogDescription>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
+            <Label>{t("Username")}</Label>
             <Input
-              id="username"
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              placeholder="Username"
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">
-              {editingUser ? t("Password (leave empty if not changing)") : t("Password")}
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              placeholder={editingUser ? t("Leave empty to keep current password") : t("Password")}
-              required={!editingUser}
-            />
-          </div>
+          {!editingUser && (
+            <div className="space-y-2">
+              <Label>{t("Password")}</Label>
+              <Input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                required
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
-            <Label htmlFor="role">{t("role")}</Label>
+            <Label>{t("Role")}</Label>
             <Select value={formData.role} onValueChange={handleRoleChange}>
               <SelectTrigger>
                 <SelectValue />
@@ -143,10 +101,10 @@ export function UserForm({ isOpen, onClose, onSubmit, editingUser }: UserFormPro
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>{t("cancel")}</Button>
-            <Button type="submit" className="bg-green-600 hover:bg-green-700">
-              {editingUser ? t("update") : t("create")}
+            <Button type="button" variant="outline" onClick={onClose}>
+              {t("Cancel")}
             </Button>
+            <Button type="submit">{editingUser ? t("Update") : t("Create")}</Button>
           </div>
         </form>
       </DialogContent>

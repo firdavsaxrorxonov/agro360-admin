@@ -12,7 +12,6 @@ import { UserForm } from "@/components/users/user-form"
 import type { User } from "@/types/order"
 import { useLanguage } from "@/contexts/language-context"
 
-
 const ITEMS_PER_PAGE = 10
 
 export default function UsersPage() {
@@ -29,17 +28,16 @@ export default function UsersPage() {
   const api = axios.create({ baseURL })
   if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`
 
+  // Fetch users
   const fetchUsers = async () => {
     try {
       setLoading(true)
       const { data } = await api.get("/user/list/")
-      const formattedUsers = data.results.map((u: User) => {
-        const dateJoined = u.date_joined ? new Date(u.date_joined.split(".")[0]).toLocaleString() : ""
-        return {
-          ...u,
-          date_joined: dateJoined,
-        }
-      })
+      const formattedUsers = data.results.map((u: User) => ({
+        ...u,
+        // date_joined format: DD.MM.YYYY
+        date_joined: u.date_joined ? new Date(u.date_joined).toLocaleDateString("ru-RU") : "",
+      }))
       setUsers(formattedUsers)
     } catch (error) {
       console.error("Failed to fetch users:", error)
@@ -66,6 +64,7 @@ export default function UsersPage() {
 
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE)
 
+  // Handle create / edit
   const handleSubmitUser = async (
     userData: Omit<User, "id" | "date_joined" | "last_login"> & {
       role: string
@@ -93,11 +92,13 @@ export default function UsersPage() {
     }
   }
 
+  // Edit user
   const handleEditUser = (user: User) => {
     setEditingUser(user)
     setIsFormOpen(true)
   }
 
+  // Delete user
   const handleDeleteUser = async (id: string) => {
     try {
       await api.delete(`/user/${id}/delete/`)
@@ -116,6 +117,7 @@ export default function UsersPage() {
     <ProtectedRoute>
       <Layout>
         <div className="space-y-6">
+          {/* Header */}
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">{t("allUsers")}</h1>
