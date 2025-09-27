@@ -56,7 +56,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
     unity: "",
     description_uz: "",
     description_ru: "",
-    tg_id: "", // ✅ optional
+    tg_id: "",
     code: "",
     article: "",
     quantity_left: "",
@@ -65,6 +65,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
   })
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [useTelegram, setUseTelegram] = useState(false) // ✅ Telegram checkbox state
 
   useEffect(() => {
     const fetchSuppliers = async () => {
@@ -88,19 +89,21 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
         unity: editingProduct.unity || (units[0]?.id || ""),
         description_uz: editingProduct.description_uz || "",
         description_ru: editingProduct.description_ru || "",
-        tg_id: editingProduct.tg_id || "", // ✅ optional
+        tg_id: editingProduct.tg_id || "",
         code: editingProduct.code || "",
         article: editingProduct.article || "",
         quantity_left: editingProduct.quantity_left?.toString() || "",
         min_quantity: editingProduct.min_quantity?.toString() || "",
         imageFile: undefined,
       })
+      setUseTelegram(Boolean(editingProduct.tg_id))
     } else if (units.length > 0 && categories.length > 0) {
       setFormData((prev) => ({
         ...prev,
         category: categories[0].id.toString(),
         unity: units[0].id,
       }))
+      setUseTelegram(false)
     }
   }, [editingProduct, units, categories])
 
@@ -112,7 +115,6 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // ✅ faqat asosiy majburiy maydonlar tekshiriladi
     if (!formData.name_uz || !formData.name_ru || !formData.price || !formData.category || !formData.unity) {
       alert(t("Please fill all required fields"))
       return
@@ -127,8 +129,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
     fd.append("description_uz", formData.description_uz)
     fd.append("description_ru", formData.description_ru)
 
-    // ✅ Telegram ID faqat tanlangan bo‘lsa qo‘shiladi
-    if (formData.tg_id) {
+    if (useTelegram && formData.tg_id) {
       fd.append("tg_id", formData.tg_id)
     }
 
@@ -260,21 +261,38 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
             </div>
           </div>
 
-          {/* Telegram ID (Optional) */}
-          <div>
-            <Label>{t("Telegram ID")} ({t("optional")})</Label>
-            <Select value={formData.tg_id} onValueChange={(value) => setFormData({ ...formData, tg_id: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder={t("Select Telegram ID")} />
-              </SelectTrigger>
-              <SelectContent>
-                {suppliers.map((s) => (
-                  <SelectItem key={s.id} value={s.tg_id}>
-                    {s.full_name} ({s.tg_id})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Telegram ID Checkbox & Select */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="useTelegram"
+                checked={useTelegram}
+                onChange={(e) => {
+                  setUseTelegram(e.target.checked)
+                  if (!e.target.checked) setFormData({ ...formData, tg_id: "" })
+                }}
+              />
+              <label htmlFor="useTelegram">{t("Telegram ID")}</label>
+            </div>
+
+            {useTelegram && (
+              <div>
+                <Label>{t("Telegram ID")}</Label>
+                <Select value={formData.tg_id} onValueChange={(value) => setFormData({ ...formData, tg_id: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("Select Telegram ID")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {suppliers.map((s) => (
+                      <SelectItem key={s.id} value={s.tg_id}>
+                        {s.full_name} ({s.tg_id})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           {/* Code & Article */}

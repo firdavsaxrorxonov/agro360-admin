@@ -1,4 +1,3 @@
-// OrderDetails.tsx
 "use client";
 
 import {
@@ -50,8 +49,13 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
                 {order.customerName}
               </div>
               <div>
-                <span className="font-medium">{t("email")}:</span>{" "}
-                {order.customerEmail}
+                <span className="font-medium">{t("contactNumber")}:</span>{" "}
+                {order.contact_number}
+              </div>
+              <div>
+                <p className="max-w-md break-words">
+                  {order.comment || t("noComment")}
+                </p>
               </div>
             </div>
           </div>
@@ -64,6 +68,7 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
                 <TableRow>
                   <TableHead>{t("product")}</TableHead>
                   <TableHead>{t("quantity")}</TableHead>
+                  <TableHead>{t("unity")}</TableHead>
                   <TableHead>{t("price")}</TableHead>
                   <TableHead>{t("total")}</TableHead>
                 </TableRow>
@@ -75,6 +80,7 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
                       {item.productName}
                     </TableCell>
                     <TableCell>{item.quantity}</TableCell>
+                    <TableCell>{item.unity}</TableCell>
                     <TableCell>{item.productPrice} UZS</TableCell>
                     <TableCell>{item.price} UZS</TableCell>
                   </TableRow>
