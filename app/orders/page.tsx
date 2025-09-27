@@ -122,7 +122,7 @@ export default function OrdersPage() {
           [t("productCode")]: item.productCode,
           [t("product")]: item.productName,
           [t("quantity")]: item.quantity,
-          [t("unity")]: item.unity, // 🔹 Excelga to‘g‘ri unity
+          [t("Unit")]: item.unity, // 🔹 Excelga to‘g‘ri unity
           [t("price")]: item.productPrice,
           [t("total")]: item.price,
           [t("date")]: new Date(order.createdAt).toLocaleDateString("uz-UZ", {

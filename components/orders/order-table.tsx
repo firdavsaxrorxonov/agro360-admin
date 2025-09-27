@@ -68,7 +68,7 @@ export function OrderTable({
         [t("productCode")]: item.productCode,
         [t("product")]: item.productName,
         [t("quantity")]: item.quantity,
-        [t("unity")]: item.unity,
+        [t("Unit")]: item.unity,
         [t("price")]: item.productPrice,
         [t("total")]: item.price,
         [t("date")]: new Date(order.createdAt).toLocaleDateString("uz-UZ", {
