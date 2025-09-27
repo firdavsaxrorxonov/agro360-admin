@@ -1,3 +1,4 @@
+// OrderDetails.tsx
 "use client";
 
 import {
@@ -40,7 +41,6 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Customer Info */}
           <div>
             <h3 className="font-semibold mb-2">{t("customerInformation")}</h3>
             <div className="space-y-1 text-sm">
@@ -60,7 +60,6 @@ export function OrderDetails({ isOpen, onClose, order }: OrderDetailsProps) {
             </div>
           </div>
 
-          {/* Order Items */}
           <div>
             <h3 className="font-semibold mb-2">{t("orderItems")}</h3>
             <Table>

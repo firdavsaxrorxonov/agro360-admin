@@ -1,3 +1,4 @@
+// OrdersPage.tsx
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -11,12 +12,6 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import type { Order } from "@/types/order";
 import { useLanguage } from "@/contexts/language-context";
-
-// 🔹 Helper: product name dan unity ajratib olish
-const getUnityFromName = (name: string) => {
-  const match = name.match(/(\d+(?:[.,]\d+)?\s*[а-яa-zA-Z]+)$/);
-  return match ? match[1] : "—";
-};
 
 export default function OrdersPage() {
   const { t } = useLanguage();
@@ -47,29 +42,30 @@ export default function OrdersPage() {
       const res = await api.get("/order/list/", { params });
       const data = res.data;
 
-      const formattedOrders: Order[] = data.results.map((o: any) => ({
-        id: o.id,
-        order_number: o.order_number,
-        customerName:
-          o.user?.first_name && o.user?.last_name
-            ? `${o.user.first_name} ${o.user.last_name}`
-            : o.name || t("noName"),
-        customerEmail: o.user?.username || t("noEmail"),
-        amount: o.total_price,
-        createdAt: o.created_at,
-        comment: o.comment || "",
-        contact_number: o.contact_number,
-        items: o.items.map((item: any) => ({
-          productId: item.product.id,
-          productName: item.product.name_uz,
-          productCode: item.product.code,
-          quantity: item.quantity,
-          price: item.price,
-          productPrice: item.product.price,
-          // 🔹 unity API da bo'lmasa ham name_uz dan ajratib olish
-          unity: item.product.unity?.name_uz || getUnityFromName(item.product.name_uz),
-        })),
-      }));
+  // API dan kelgan orders map qilinadi
+const formattedOrders = data.results.map((order: any) => ({
+  id: order.id,
+  order_number: order.order_number,
+  customerName:
+    order.user?.first_name && order.user?.last_name
+      ? `${order.user.first_name} ${order.user.last_name}`
+      : order.name || "—",
+  customerEmail: order.user?.username || "—",
+  amount: order.total_price,
+  createdAt: order.created_at,
+  comment: order.comment || "—",
+  contact_number: order.contact_number || "—",
+  items: order.items.map((item: any) => ({
+    productId: item.product.id,
+    productName: item.product.name_uz, // faqat nomi, unity emas
+    productCode: item.product.code,
+    quantity: item.quantity,
+    price: item.price,
+    productPrice: item.product.price,
+    unity: item.product.unity || "—", // 🔹 faqat API dan kelayotgan unity ishlatiladi
+  })),
+}));
+
 
       setOrders(formattedOrders);
       setCurrentPage(data.page);
@@ -122,7 +118,7 @@ export default function OrdersPage() {
           [t("productCode")]: item.productCode,
           [t("product")]: item.productName,
           [t("quantity")]: item.quantity,
-          [t("Unit")]: item.unity, // 🔹 Excelga to‘g‘ri unity
+          [t("Unit")]: item.unity,
           [t("price")]: item.productPrice,
           [t("total")]: item.price,
           [t("date")]: new Date(order.createdAt).toLocaleDateString("uz-UZ", {

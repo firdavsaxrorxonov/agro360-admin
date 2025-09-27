@@ -150,7 +150,10 @@ export function ProductTable({
 
                 <TableCell>{getCategoryName(product.category)}</TableCell>
                 <TableCell>{getUnitName(product.unity)}</TableCell>
-                <TableCell>{product.tg_id || "—"}</TableCell>
+                <TableCell>
+                  {product.tg_id && product.tg_id !== "none" ? product.tg_id : "—"}
+                </TableCell>
+
                 <TableCell>{product.code || "—"}</TableCell>
                 <TableCell>{product.article || "—"}</TableCell>
                 <TableCell>{product.quantity_left || "—"}</TableCell>

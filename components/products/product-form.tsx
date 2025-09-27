@@ -65,7 +65,6 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
   })
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
-  const [useTelegram, setUseTelegram] = useState(false) // ✅ Telegram checkbox state
 
   useEffect(() => {
     const fetchSuppliers = async () => {
@@ -96,14 +95,12 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
         min_quantity: editingProduct.min_quantity?.toString() || "",
         imageFile: undefined,
       })
-      setUseTelegram(Boolean(editingProduct.tg_id))
     } else if (units.length > 0 && categories.length > 0) {
       setFormData((prev) => ({
         ...prev,
         category: categories[0].id.toString(),
         unity: units[0].id,
       }))
-      setUseTelegram(false)
     }
   }, [editingProduct, units, categories])
 
@@ -128,11 +125,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
     fd.append("unity", formData.unity)
     fd.append("description_uz", formData.description_uz)
     fd.append("description_ru", formData.description_ru)
-
-    if (useTelegram && formData.tg_id) {
-      fd.append("tg_id", formData.tg_id)
-    }
-
+    fd.append("tg_id", formData.tg_id)
     fd.append("code", formData.code)
     fd.append("article", formData.article)
     fd.append("quantity_left", formData.quantity_left)
@@ -195,9 +188,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
                 type="number"
                 step="any"
                 value={formData.price}
-                onChange={(e) =>
-                  setFormData({ ...formData, price: e.target.value.replace(",", ".") })
-                }
+                onChange={(e) => setFormData({ ...formData, price: e.target.value.replace(",", ".") })}
               />
             </div>
             <div>
@@ -206,9 +197,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
                 type="number"
                 step="any"
                 value={formData.quantity_left}
-                onChange={(e) =>
-                  setFormData({ ...formData, quantity_left: e.target.value.replace(",", ".") })
-                }
+                onChange={(e) => setFormData({ ...formData, quantity_left: e.target.value.replace(",", ".") })}
               />
             </div>
             <div>
@@ -217,9 +206,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
                 type="number"
                 step="any"
                 value={formData.min_quantity}
-                onChange={(e) =>
-                  setFormData({ ...formData, min_quantity: e.target.value.replace(",", ".") })
-                }
+                onChange={(e) => setFormData({ ...formData, min_quantity: e.target.value.replace(",", ".") })}
               />
             </div>
           </div>
@@ -228,10 +215,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>{t("Category")}</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
-              >
+              <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder={t("Select category")} />
                 </SelectTrigger>
@@ -261,39 +245,35 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
             </div>
           </div>
 
-          {/* Telegram ID Checkbox & Select */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="useTelegram"
-                checked={useTelegram}
-                onChange={(e) => {
-                  setUseTelegram(e.target.checked)
-                  if (!e.target.checked) setFormData({ ...formData, tg_id: "" })
-                }}
+          {/* Telegram ID Select */}
+          <div>
+            <Label>{t("Telegram ID")}</Label>
+            {suppliers.length > 0 ? (
+              <Select value={formData.tg_id} onValueChange={(value) => setFormData({ ...formData, tg_id: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("Select Telegram ID")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {/* Hech kim varianti */}
+                  <SelectItem value="none">{t("Hech kim")}</SelectItem>
+                  {/* Supplierlar */}
+                  {suppliers.map((s) => (
+                    <SelectItem key={s.id} value={s.tg_id}>
+                      {s.full_name} ({s.tg_id})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                type="text"
+                placeholder={t("Enter Telegram ID")}
+                value={formData.tg_id}
+                onChange={(e) => setFormData({ ...formData, tg_id: e.target.value })}
               />
-              <label htmlFor="useTelegram">{t("Telegram ID")}</label>
-            </div>
-
-            {useTelegram && (
-              <div>
-                <Label>{t("Telegram ID")}</Label>
-                <Select value={formData.tg_id} onValueChange={(value) => setFormData({ ...formData, tg_id: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("Select Telegram ID")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {suppliers.map((s) => (
-                      <SelectItem key={s.id} value={s.tg_id}>
-                        {s.full_name} ({s.tg_id})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             )}
           </div>
+
 
           {/* Code & Article */}
           <div className="grid grid-cols-2 gap-4">

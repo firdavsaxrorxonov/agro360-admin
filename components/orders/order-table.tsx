@@ -57,7 +57,6 @@ export function OrderTable({
     }
   };
 
-  // 🔹 Excelga comment qo‘shildi
   const exportSingleOrderToExcel = (order: Order) => {
     const rows: any[] = [];
 
@@ -81,7 +80,7 @@ export function OrderTable({
           minute: "2-digit",
           second: "2-digit",
         }),
-        [t("comment")]: order.comment || "", // 🔹 comment qo‘shildi
+        [t("comment")]: order.comment || "",
       });
     });
 
@@ -94,8 +93,6 @@ export function OrderTable({
     const fileName = `buyurtma_${order.order_number}_${order.customerName}.xlsx`;
     saveAs(data, fileName);
   };
-
-  const uniqueUsers = Array.from(new Set(orders.map((o) => o.customerName)));
 
   return (
     <div className="rounded-md border overflow-x-auto">
