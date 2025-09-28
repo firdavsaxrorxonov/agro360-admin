@@ -131,7 +131,6 @@ const formattedOrders = data.results.map((order: any) => ({
             minute: "2-digit",
             second: "2-digit",
           }),
-          [t("comment")]: order.comment || "",
         });
       });
     });

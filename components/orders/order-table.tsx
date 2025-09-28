@@ -80,19 +80,33 @@ export function OrderTable({
           minute: "2-digit",
           second: "2-digit",
         }),
-        [t("comment")]: order.comment || "",
       });
     });
 
+    // Jadvalni yaratamiz
     const worksheet = XLSX.utils.json_to_sheet(rows);
+
+    // Jadval oxirgi qatorini aniqlaymiz
+    const worksheetRange = XLSX.utils.decode_range(worksheet["!ref"]!);
+
+    // 🔽 Kommentariyani 5 qator pastroqqa joylaymiz
+    XLSX.utils.sheet_add_aoa(
+      worksheet,
+      [[t("comment"), order.comment || "—"]],
+      { origin: { r: worksheetRange.e.r + 5, c: 0 } } // oxirgi qatordan 5 pastga
+    );
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Order");
+
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
 
     const fileName = `buyurtma_${order.order_number}_${order.customerName}.xlsx`;
     saveAs(data, fileName);
   };
+
+
 
   return (
     <div className="rounded-md border overflow-x-auto">
