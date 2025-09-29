@@ -75,11 +75,7 @@ export function OrderTable({
           month: "2-digit",
           day: "2-digit",
         }),
-        [t("time")]: new Date(order.createdAt).toLocaleTimeString("uz-UZ", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
+        // ❌ vaqtni bu yerda yozmaymiz
       });
     });
 
@@ -89,11 +85,15 @@ export function OrderTable({
     // Jadval oxirgi qatorini aniqlaymiz
     const worksheetRange = XLSX.utils.decode_range(worksheet["!ref"]!);
 
-    // 🔽 Kommentariyani 5 qator pastroqqa joylaymiz
+    // 🔽 Komment va vaqtni yonma-yon qo‘yamiz
     XLSX.utils.sheet_add_aoa(
       worksheet,
-      [[t("comment"), order.comment || "—"]],
-      { origin: { r: worksheetRange.e.r + 5, c: 0 } } // oxirgi qatordan 5 pastga
+      [[t("comment"), order.comment || "—", t(""), new Date(order.createdAt).toLocaleTimeString("uz-UZ", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })]],
+      { origin: { r: worksheetRange.e.r + 5, c: 0 } }
     );
 
     const workbook = XLSX.utils.book_new();
@@ -105,6 +105,7 @@ export function OrderTable({
     const fileName = `buyurtma_${order.order_number}_${order.customerName}.xlsx`;
     saveAs(data, fileName);
   };
+
 
 
 
