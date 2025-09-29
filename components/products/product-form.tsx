@@ -69,7 +69,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const { data } = await axios.get("https://agro.felixits.uz/api/v1/orders/supplier/")
+        const { data } = await axios.get("hhttps://aagro.felixits.uz/api/v1/orders/supplier/")
         setSuppliers(data)
       } catch (err) {
         console.error(t("Failed to fetch suppliers") + ":", err)

@@ -36,7 +36,7 @@ export default function BannerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ITEMS_PER_PAGE = 10;
 
-  const baseURL = "https://agro.felixits.uz/api/v1/admin";
+  const baseURL = "https://aagro.felixits.uz/api/v1/admin";
   const token =
     typeof window !== "undefined" ? localStorage.getItem("agroAdminToken") : null;
 
@@ -172,7 +172,7 @@ export default function BannerPage() {
                     </TableCell>
                     <TableCell>
                       <img
-                        src={`https://agro.felixits.uz${banner.banner}`}
+                        src={`https://aagro.felixits.uz/${banner.banner}`}
                         alt={`Banner`}
                         className="h-24 object-contain"
                       />
