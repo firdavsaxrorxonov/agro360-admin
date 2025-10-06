@@ -66,10 +66,11 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
 
+  // API'dan supplierlarni olish
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const { data } = await axios.get("hhttps://aagro.felixits.uz/api/v1/orders/supplier/")
+        const { data } = await axios.get("https://aagro.felixits.uz/api/v1/orders/supplier/")
         setSuppliers(data)
       } catch (err) {
         console.error(t("Failed to fetch suppliers") + ":", err)
@@ -78,6 +79,7 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
     fetchSuppliers()
   }, [t])
 
+  // Editing yoki default values
   useEffect(() => {
     if (editingProduct) {
       setFormData({
@@ -104,11 +106,13 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
     }
   }, [editingProduct, units, categories])
 
+  // Rasm tanlash
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) setFormData({ ...formData, imageFile: file })
   }
 
+  // Form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -248,32 +252,25 @@ export function ProductForm({ isOpen, onClose, categories, units, editingProduct
           {/* Telegram ID Select */}
           <div>
             <Label>{t("Telegram ID")}</Label>
-            {suppliers.length > 0 ? (
-              <Select value={formData.tg_id} onValueChange={(value) => setFormData({ ...formData, tg_id: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t("Select Telegram ID")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {/* Hech kim varianti */}
-                  <SelectItem value="none">{t("Hech kim")}</SelectItem>
-                  {/* Supplierlar */}
-                  {suppliers.map((s) => (
-                    <SelectItem key={s.id} value={s.tg_id}>
-                      {s.full_name} ({s.tg_id})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <Input
-                type="text"
-                placeholder={t("Enter Telegram ID")}
-                value={formData.tg_id}
-                onChange={(e) => setFormData({ ...formData, tg_id: e.target.value })}
-              />
-            )}
+            <Select
+              value={formData.tg_id || "none"}
+              onValueChange={(value) =>
+                setFormData({ ...formData, tg_id: value === "none" ? "" : value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t("Select Telegram ID")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">{t("Hech kim")}</SelectItem>
+                {suppliers.map((s) => (
+                  <SelectItem key={s.id} value={s.tg_id}>
+                    {s.full_name} ({s.tg_id})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-
 
           {/* Code & Article */}
           <div className="grid grid-cols-2 gap-4">
