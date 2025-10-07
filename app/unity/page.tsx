@@ -12,8 +12,14 @@ import { motion, AnimatePresence } from "framer-motion"
 import axios from "axios"
 import { toast } from "sonner"
 import { useLanguage } from "@/contexts/language-context"
-
-
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 
 export interface Unit {
   id: number
@@ -30,6 +36,8 @@ export default function UnitsPage() {
   const [loading, setLoading] = useState(true)
   const [nameUz, setNameUz] = useState("")
   const [nameRu, setNameRu] = useState("")
+  const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const ITEMS_PER_PAGE = 10
 
   const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
@@ -94,6 +102,20 @@ export default function UnitsPage() {
       toast.success(t("Unit deleted"))
     } catch {
       toast.error(t("Failed to delete unit"))
+    }
+  }
+
+  // MODAL OPEN DELETE
+  const confirmDelete = (id: number) => {
+    setDeleteId(id)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirmed = async () => {
+    if (deleteId !== null) {
+      await handleDeleteUnit(deleteId)
+      setDeleteId(null)
+      setIsDeleteDialogOpen(false)
     }
   }
 
@@ -180,7 +202,7 @@ export default function UnitsPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleDeleteUnit(unit.id)}
+                              onClick={() => confirmDelete(unit.id)}
                               className="text-red-600 hover:text-red-700"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -239,6 +261,21 @@ export default function UnitsPage() {
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Delete Confirmation Dialog */}
+              <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle>{t("ConDel")}</DialogTitle>
+                    <DialogDescription>{t("sure")}</DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter className="flex justify-end gap-2 mt-4">
+                    <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>{t("Cancele")}</Button>
+                    <Button variant="destructive" onClick={handleDeleteConfirmed}>{t("Delete")}</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
             </>
           )}
         </div>

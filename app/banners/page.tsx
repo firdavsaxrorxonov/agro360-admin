@@ -18,7 +18,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import axios from "axios";
 import { useLanguage } from "@/contexts/language-context";
-
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface Banner {
   id: string;
@@ -33,6 +40,8 @@ export default function BannerPage() {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ITEMS_PER_PAGE = 10;
 
@@ -124,6 +133,20 @@ export default function BannerPage() {
     }
   };
 
+  // DELETE MODAL FUNCTIONS
+  const confirmDelete = (id: string) => {
+    setDeleteId(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (deleteId) {
+      await handleDeleteBanner(deleteId);
+      setDeleteId(null);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
   const handleEditBanner = (banner: Banner) => {
     setEditingBanner(banner);
     setIsFormOpen(true);
@@ -189,7 +212,7 @@ export default function BannerPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => handleDeleteBanner(banner.id)}
+                          onClick={() => confirmDelete(banner.id)}
                           className="text-red-600 hover:text-red-700"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -288,6 +311,24 @@ export default function BannerPage() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Delete Confirmation Dialog */}
+          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>{t("ConDel")}</DialogTitle>
+                <DialogDescription>{t("sure")}</DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                  {t("Cancele")}
+                </Button>
+                <Button variant="destructive" onClick={handleDeleteConfirmed}>
+                  {t("Delete")}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </Layout>
     </ProtectedRoute>

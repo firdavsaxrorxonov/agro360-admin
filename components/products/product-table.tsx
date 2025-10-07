@@ -7,6 +7,14 @@ import { Trash2, Edit } from "lucide-react"
 import type { Product, Category } from "@/types/product"
 import axios from "axios"
 import { useLanguage } from "@/contexts/language-context"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 
 interface ProductTableProps {
   products: Product[]
@@ -32,6 +40,10 @@ export function ProductTable({
   const { language, t } = useLanguage()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [tempPrice, setTempPrice] = useState<string>("")
+
+  // 🔥 O‘chirish modali uchun
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   const getUnitName = (unityId: string) =>
     units.find((u) => u.id === unityId)
@@ -75,19 +87,28 @@ export function ProductTable({
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
-            "Accept-Language": language, // ✅ Accept-Language header
+            "Accept-Language": language,
           },
         }
       )
 
-      // ✅ faqat shu productni parent-ga qaytarib yangilash
       onUpdateProduct({ ...product, price: tempPrice })
-
       setEditingId(null)
     } catch (err) {
       console.error(err)
       alert(t("Error") + ": " + t("Failed to fetch suppliers"))
     }
+  }
+
+  const confirmDelete = (id: string) => {
+    setDeleteId(id)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirmed = () => {
+    if (deleteId) onDeleteProduct(deleteId)
+    setDeleteId(null)
+    setIsDeleteDialogOpen(false)
   }
 
   return (
@@ -97,7 +118,7 @@ export function ProductTable({
           <TableHeader>
             <TableRow>
               <TableHead>№</TableHead>
-              <TableHead>{t("Name")}</TableHead> {/* ✅ faqat bitta ustun */}
+              <TableHead>{t("Name")}</TableHead>
               <TableHead>{t("Price")}</TableHead>
               <TableHead>{t("Category")}</TableHead>
               <TableHead>{t("Unit")}</TableHead>
@@ -116,12 +137,10 @@ export function ProductTable({
                   {(currentPage - 1) * itemsPerPage + index + 1}
                 </TableCell>
 
-                {/* ✅ faqat tanlangan tilni chiqaramiz */}
                 <TableCell>
                   {language === "uz" ? product.name_uz : product.name_ru}
                 </TableCell>
 
-                {/* Price inline edit */}
                 <TableCell
                   onDoubleClick={() => handleDoubleClick(product)}
                   className="cursor-pointer"
@@ -166,7 +185,7 @@ export function ProductTable({
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => onDeleteProduct(product.id)}
+                      onClick={() => confirmDelete(product.id)}
                       className="text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -176,9 +195,28 @@ export function ProductTable({
               </TableRow>
             ))}
           </TableBody>
-
         </Table>
       </div>
+
+      {/* 🔥 Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t("ConDel")}</DialogTitle>
+            <DialogDescription>
+              {t("sure")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              {t("Cancele")}
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirmed}>
+              {t("Delete")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
