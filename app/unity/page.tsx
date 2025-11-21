@@ -27,10 +27,13 @@ export interface Unit {
   nameRu: string
 }
 
+const ITEMS_PER_PAGE = 10 // Sahifadagi elementlar soni
+
 export default function UnitsPage() {
   const { t } = useLanguage()
   const [units, setUnits] = useState<Unit[]>([])
   const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1) // 🔑 Yangi: Umumiy sahifalar soni
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null)
   const [loading, setLoading] = useState(true)
@@ -38,7 +41,6 @@ export default function UnitsPage() {
   const [nameRu, setNameRu] = useState("")
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const ITEMS_PER_PAGE = 10
 
   const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? ""
   const token = typeof window !== "undefined" ? localStorage.getItem("agroAdminToken") : null
@@ -46,15 +48,25 @@ export default function UnitsPage() {
   const api = axios.create({ baseURL })
   if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`
 
+  // 🔄 Serverdan birliklarni olish funksiyasi (Pagination bilan)
   const fetchUnits = async () => {
     try {
       setLoading(true)
-      const { data } = await api.get("/unity/list/")
+
+      const params: any = {
+        page: currentPage, // 🔑 Joriy sahifani yuborish
+        page_size: ITEMS_PER_PAGE, // Sahifadagi elementlar sonini yuborish
+      }
+
+      const { data } = await api.get("/unity/list/", { params })
+
       setUnits(data.results.map((u: any) => ({
         id: u.id,
         nameUz: u.name_uz,
         nameRu: u.name_ru
       })))
+
+      setTotalPages(data.total_pages || 1) // 🔑 Yangilanish: umumiy sahifalar sonini olish
     } catch (error) {
       console.error(error)
       toast.error(t("Failed to fetch units"))
@@ -63,19 +75,30 @@ export default function UnitsPage() {
     }
   }
 
-  useEffect(() => { fetchUnits() }, [])
+  // 🔑 Sahifa raqami o'zgarganda ma'lumotlarni qayta yuklash
+  useEffect(() => {
+    fetchUnits()
+  }, [currentPage]) // <-- currentPage ga bog'liq
 
-  const paginatedUnits = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE
-    return units.slice(start, start + ITEMS_PER_PAGE)
-  }, [units, currentPage])
+  // ❌ Olib tashlandi: Server-side paginationda bu shart emas.
+  // const paginatedUnits = useMemo(() => {
+  //   const start = (currentPage - 1) * ITEMS_PER_PAGE
+  //   return units.slice(start, start + ITEMS_PER_PAGE)
+  // }, [units, currentPage])
 
   // CREATE
   const handleCreateUnit = async (data: Omit<Unit, "id">) => {
     try {
       await api.post("/unity/create/", { name_uz: data.nameUz, name_ru: data.nameRu })
       toast.success(t("Unit created"))
-      fetchUnits()
+
+      // Yangi elementni qo'shgandan so'ng 1-sahifaga o'tamiz
+      if (currentPage !== 1) {
+        setCurrentPage(1)
+      } else {
+        fetchUnits()
+      }
+
     } catch (error: any) {
       console.error(error)
       toast.error(error?.response?.data?.detail || t("Failed to create unit"))
@@ -87,7 +110,7 @@ export default function UnitsPage() {
     try {
       await api.patch(`/unity/${id}/update/`, { name_uz: data.nameUz, name_ru: data.nameRu })
       toast.success(t("Unit updated"))
-      fetchUnits()
+      fetchUnits() // Ma'lumotlarni yangilash
     } catch (error: any) {
       console.error(error)
       toast.error(error?.response?.data?.detail || t("Failed to update unit"))
@@ -98,8 +121,16 @@ export default function UnitsPage() {
   const handleDeleteUnit = async (id: number) => {
     try {
       await api.delete(`/unity/${id}/delete/`)
-      setUnits(prev => prev.filter(u => u.id !== id))
+      // setUnits(prev => prev.filter(u => u.id !== id)) // ❌ Klient tomonida filterlash olib tashlandi
       toast.success(t("Unit deleted"))
+
+      // Agar joriy sahifadagi oxirgi element o'chirilgan bo'lsa va sahifa 1 emas bo'lsa, oldingi sahifaga qaytamiz.
+      if (units.length === 1 && currentPage > 1) {
+        setCurrentPage(prev => prev - 1)
+      } else {
+        fetchUnits() // Ma'lumotlarni qayta yuklash
+      }
+
     } catch {
       toast.error(t("Failed to delete unit"))
     }
@@ -189,7 +220,8 @@ export default function UnitsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedUnits.map((unit, index) => (
+                    {/* units.map o'rniga paginatedUnits.map ishlatilgan edi */}
+                    {units.map((unit, index) => (
                       <TableRow key={unit.id}>
                         <TableCell className="font-medium">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                         <TableCell>{unit.nameUz}</TableCell>
@@ -216,10 +248,10 @@ export default function UnitsPage() {
               </div>
 
               {/* Pagination */}
-              {Math.ceil(units.length / ITEMS_PER_PAGE) > 1 && (
+              {totalPages > 1 && ( // 🔑 Yangilanish: totalPages > 1 bo'lsa ko'rsatiladi
                 <Pagination
                   currentPage={currentPage}
-                  totalPages={Math.ceil(units.length / ITEMS_PER_PAGE)}
+                  totalPages={totalPages} // 🔑 totalPages ishlatiladi
                   onPageChange={setCurrentPage}
                 />
               )}
