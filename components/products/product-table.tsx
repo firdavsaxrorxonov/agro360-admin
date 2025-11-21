@@ -208,10 +208,12 @@ export function ProductTable({
                 {/* 🔹 is_active toggle avtomatik on/off */}
                 <TableCell>
                   <Switch
-                    checked={!!product.is_active} // true bo‘lsa on, false bo‘lsa off
+                    checked={!!product.is_active}
                     onCheckedChange={(val) => handleToggleActive(product, val)}
+                    className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                   />
                 </TableCell>
+
 
                 <TableCell>
                   <div className="flex items-center gap-2">

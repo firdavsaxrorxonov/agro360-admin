@@ -30,7 +30,7 @@ interface OrderTableProps {
   onViewOrder: (order: Order) => void;
   onDeleteSuccess: () => void;
   onSelectChange: (ids: string[]) => void;
-  fetchOrders?: (page?: number) => void; // status update uchun
+  fetchOrders?: (page?: number) => void;
   currentPage?: number;
 }
 
@@ -193,7 +193,11 @@ export function OrderTable({
 
           <TableBody>
             {orders.map((order, index) => (
-              <TableRow key={order.id}>
+              <TableRow
+                key={order.id}
+                className={`transition-colors ${orderStatuses[order.id] === "DONE" ? "bg-green-100" : "bg-white"
+                  }`}
+              >
                 <TableCell className="font-medium">{index + 1}</TableCell>
                 <TableCell>
                   <div className="font-medium">{order.customerName}</div>
@@ -224,11 +228,11 @@ export function OrderTable({
                 {/* Status select */}
                 <TableCell>
                   <select
-                    value={orderStatuses[order.id] || order.status} // backend status
+                    value={orderStatuses[order.id] || order.status}
                     onChange={(e) =>
                       handleStatusChange(order.id, e.target.value as "NEW" | "DONE")
                     }
-                    className="border border-gray-300 rounded-md px-3 py-1 text-sm font-medium text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 hover:border-green-500 transition-colors"
+                    className="border border-gray-300 rounded-md px-3 py-1 text-sm font-medium text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 hover:border-green-500 transition-colors bg-white"
                   >
                     <option value="NEW">{t("new")}</option>
                     <option value="DONE">{t("ready")}</option>
