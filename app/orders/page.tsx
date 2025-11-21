@@ -1,4 +1,3 @@
-// OrdersPage.tsx
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -56,6 +55,7 @@ export default function OrdersPage() {
         createdAt: order.created_at,
         comment: order.comment || "—",
         contact_number: order.contact_number || "—",
+        status: order.status || "NEW", // status qo‘shildi
         items: order.items.map((item: any) => ({
           productId: item.product.id,
           productName: item.product.name_uz,
@@ -109,7 +109,6 @@ export default function OrdersPage() {
   const exportToExcel = () => {
     let exportOrders = filteredOrders;
 
-    // Agar tanlangan bo‘lsa — faqat ular export qilinadi
     if (selectedOrderIds.length > 0) {
       exportOrders = filteredOrders.filter((o) =>
         selectedOrderIds.includes(o.id)
@@ -189,7 +188,9 @@ export default function OrdersPage() {
             orders={filteredOrders}
             onViewOrder={handleViewOrder}
             onDeleteSuccess={() => fetchOrders(currentPage)}
-            onSelectChange={setSelectedOrderIds} // yangi
+            onSelectChange={setSelectedOrderIds}
+            fetchOrders={fetchOrders} // status update uchun
+            currentPage={currentPage}
           />
 
           <div className="flex justify-center items-center gap-2 mt-4">

@@ -1,4 +1,3 @@
-// OrderTable.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -31,6 +30,8 @@ interface OrderTableProps {
   onViewOrder: (order: Order) => void;
   onDeleteSuccess: () => void;
   onSelectChange: (ids: string[]) => void;
+  fetchOrders?: (page?: number) => void; // status update uchun
+  currentPage?: number;
 }
 
 export function OrderTable({
@@ -38,6 +39,8 @@ export function OrderTable({
   onViewOrder,
   onDeleteSuccess,
   onSelectChange,
+  fetchOrders,
+  currentPage = 1,
 }: OrderTableProps) {
   const { t, language } = useLanguage();
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -48,6 +51,19 @@ export function OrderTable({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
 
+  // Status logikasi
+  const [orderStatuses, setOrderStatuses] = useState<{ [id: string]: "NEW" | "DONE" }>({});
+
+  // Backenddan kelgan statuslarni initialize qilish
+  useEffect(() => {
+    const initialStatuses: { [id: string]: "NEW" | "DONE" } = {};
+    orders.forEach((order) => {
+      initialStatuses[order.id] = order.status;
+    });
+    setOrderStatuses(initialStatuses);
+  }, [orders]);
+
+  // DELETE dialog
   const confirmDelete = (id: string) => {
     setDeleteId(id);
     setIsDeleteDialogOpen(true);
@@ -79,6 +95,7 @@ export function OrderTable({
     }
   };
 
+  // Checkbox handlerlari
   const toggleSelectAll = () => {
     if (selectAll) {
       setSelectedIds([]);
@@ -100,6 +117,32 @@ export function OrderTable({
     onSelectChange(selectedIds);
   }, [selectedIds]);
 
+  // Status update
+  const handleStatusChange = async (orderId: string, status: "NEW" | "DONE") => {
+    setOrderStatuses((prev) => ({ ...prev, [orderId]: status }));
+
+    try {
+      const token = localStorage.getItem("agroAdminToken");
+
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/order/${orderId}/status_update/`,
+        { status },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Accept-Language": language,
+          },
+        }
+      );
+
+      // Orderlar ro'yxatini qayta yuklash
+      fetchOrders?.(currentPage);
+    } catch (error) {
+      console.error("Status update failed:", error);
+    }
+  };
+
+  // Excel export
   const exportSingleOrderToExcel = (order: Order) => {
     const rows: any[] = [];
 
@@ -114,6 +157,7 @@ export function OrderTable({
         [t("price")]: item.productPrice,
         [t("total")]: item.price,
         [t("date")]: new Date(order.createdAt).toLocaleDateString("uz-UZ"),
+        [t("status")]: orderStatuses[order.id] || "NEW",
       });
     });
 
@@ -140,12 +184,9 @@ export function OrderTable({
               <TableHead>{t("total")}</TableHead>
               <TableHead>{t("date")}</TableHead>
               <TableHead>
-                <input
-                  type="checkbox"
-                  checked={selectAll}
-                  onChange={toggleSelectAll}
-                />
+                <input type="checkbox" checked={selectAll} onChange={toggleSelectAll} />
               </TableHead>
+              <TableHead>{t("status")}</TableHead>
               <TableHead>{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
@@ -171,7 +212,7 @@ export function OrderTable({
                   })}
                 </TableCell>
 
-                {/* 🔹 Checkbox date ustunidan keyin */}
+                {/* Checkbox */}
                 <TableCell>
                   <input
                     type="checkbox"
@@ -180,12 +221,26 @@ export function OrderTable({
                   />
                 </TableCell>
 
+                {/* Status select */}
+                <TableCell>
+                  <select
+                    value={orderStatuses[order.id] || order.status} // backend status
+                    onChange={(e) =>
+                      handleStatusChange(order.id, e.target.value as "NEW" | "DONE")
+                    }
+                    className="border border-gray-300 rounded-md px-3 py-1 text-sm font-medium text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 hover:border-green-500 transition-colors"
+                  >
+                    <option value="NEW">{t("new")}</option>
+                    <option value="DONE">{t("ready")}</option>
+                  </select>
+                </TableCell>
+
+                {/* Actions */}
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Button size="sm" variant="ghost" onClick={() => onViewOrder(order)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-
                     <Button
                       size="sm"
                       variant="ghost"
@@ -195,7 +250,6 @@ export function OrderTable({
                     >
                       {loadingId === order.id ? "..." : <Trash2 className="h-4 w-4" />}
                     </Button>
-
                     <Button
                       className="bg-black hover:text-gray-950 text-white"
                       size="sm"
