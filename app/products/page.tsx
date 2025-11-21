@@ -63,7 +63,7 @@ export default function ProductsPage() {
       )
     } catch (error) {
       console.error("Failed to fetch categories or units:", error)
-      alert(t("Error") + ": " + t("Failed to fetch suppliers"))
+      alert(t("Error") + ": " + t("Failed to fetch categories or units"))
     }
   }
 
@@ -78,10 +78,10 @@ export default function ProductsPage() {
       }
 
       if (searchTerm.trim() !== "") {
+        // ✅ name yoki tg_id bo‘yicha qidirish
         params.search = searchTerm
       }
 
-      // ✅ kategoriya "all" bo‘lmasa, backendga yuboramiz
       if (selectedCategory !== "all") {
         params.category = selectedCategory
       }
@@ -108,13 +108,11 @@ export default function ProductsPage() {
     }
   }
 
-
   // 📌 Effektlar
   useEffect(() => {
     fetchCategoriesAndUnits()
   }, [language])
 
-  // 🔑 Har safar search, category, page yoki language o‘zgarsa → API chaqiriladi
   useEffect(() => {
     fetchProducts()
   }, [language, currentPage, searchTerm, selectedCategory])
@@ -136,7 +134,7 @@ export default function ProductsPage() {
       setProducts((prev) => prev.filter((p) => p.id !== id))
     } catch (error) {
       console.error("Failed to delete product:", error)
-      alert(t("Error") + ": " + t("Failed to fetch suppliers"))
+      alert(t("Error") + ": " + t("Failed to delete product"))
     }
   }
 
@@ -163,11 +161,11 @@ export default function ProductsPage() {
           {/* Search & Category Filter */}
           <div className="flex gap-4 flex-wrap items-center">
             <Input
-              placeholder={t("products")}
+              placeholder={`${t("products")} / Telegram ID`}
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value)
-                setCurrentPage(1) // 🔑 yangi qidiruvda page 1 dan boshlanadi
+                setCurrentPage(1)
               }}
               className="max-w-xs"
             />
@@ -177,7 +175,7 @@ export default function ProductsPage() {
                 value={selectedCategory}
                 onValueChange={(val) => {
                   setSelectedCategory(val)
-                  setCurrentPage(1) // 🔑 filter o‘zgarsa ham 1-sahifadan boshlanadi
+                  setCurrentPage(1)
                 }}
               >
                 <SelectTrigger>

@@ -1,6 +1,7 @@
+// OrderTable.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -29,17 +30,23 @@ interface OrderTableProps {
   orders: Order[];
   onViewOrder: (order: Order) => void;
   onDeleteSuccess: () => void;
+  onSelectChange: (ids: string[]) => void;
 }
 
 export function OrderTable({
   orders,
   onViewOrder,
   onDeleteSuccess,
+  onSelectChange,
 }: OrderTableProps) {
   const { t, language } = useLanguage();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // Checkbox logikasi
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectAll, setSelectAll] = useState(false);
 
   const confirmDelete = (id: string) => {
     setDeleteId(id);
@@ -72,6 +79,27 @@ export function OrderTable({
     }
   };
 
+  const toggleSelectAll = () => {
+    if (selectAll) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(orders.map((o) => o.id));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const toggleSelectOne = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter((i) => i !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
+  useEffect(() => {
+    onSelectChange(selectedIds);
+  }, [selectedIds]);
+
   const exportSingleOrderToExcel = (order: Order) => {
     const rows: any[] = [];
 
@@ -85,32 +113,11 @@ export function OrderTable({
         [t("Unit")]: item.unity,
         [t("price")]: item.productPrice,
         [t("total")]: item.price,
-        [t("date")]: new Date(order.createdAt).toLocaleDateString("uz-UZ", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }),
+        [t("date")]: new Date(order.createdAt).toLocaleDateString("uz-UZ"),
       });
     });
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
-    const worksheetRange = XLSX.utils.decode_range(worksheet["!ref"]!);
-
-    XLSX.utils.sheet_add_aoa(
-      worksheet,
-      [[
-        t("comment"),
-        order.comment || "—",
-        t(""),
-        new Date(order.createdAt).toLocaleTimeString("uz-UZ", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
-      ]],
-      { origin: { r: worksheetRange.e.r + 5, c: 0 } }
-    );
-
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Order");
 
@@ -132,9 +139,17 @@ export function OrderTable({
               <TableHead>{t("items")}</TableHead>
               <TableHead>{t("total")}</TableHead>
               <TableHead>{t("date")}</TableHead>
+              <TableHead>
+                <input
+                  type="checkbox"
+                  checked={selectAll}
+                  onChange={toggleSelectAll}
+                />
+              </TableHead>
               <TableHead>{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {orders.map((order, index) => (
               <TableRow key={order.id}>
@@ -155,6 +170,16 @@ export function OrderTable({
                     second: "2-digit",
                   })}
                 </TableCell>
+
+                {/* 🔹 Checkbox date ustunidan keyin */}
+                <TableCell>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(order.id)}
+                    onChange={() => toggleSelectOne(order.id)}
+                  />
+                </TableCell>
+
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Button size="sm" variant="ghost" onClick={() => onViewOrder(order)}>

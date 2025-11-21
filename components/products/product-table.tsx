@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Trash2, Edit } from "lucide-react"
 import type { Product, Category } from "@/types/product"
-import axios from "axios"
 import { useLanguage } from "@/contexts/language-context"
 import {
   Dialog,
@@ -15,6 +14,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { Switch } from "@/components/ui/switch"
 
 interface ProductTableProps {
   products: Product[]
@@ -41,7 +41,6 @@ export function ProductTable({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [tempPrice, setTempPrice] = useState<string>("")
 
-  // 🔥 O‘chirish modali uchun
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
@@ -66,7 +65,6 @@ export function ProductTable({
 
   const handlePriceUpdate = async (product: Product) => {
     if (tempPrice.trim() === "" || isNaN(Number(tempPrice))) return
-
     try {
       const token = localStorage.getItem("agroAdminToken")
       const fd = new FormData()
@@ -79,24 +77,52 @@ export function ProductTable({
       fd.append("code", product.code || "")
       fd.append("article", product.article || "")
       fd.append("quantity_left", product.quantity_left?.toString() || "")
+      fd.append("is_active", product.is_active ? "true" : "false")
 
-      await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/product/${product.id}/update/`,
-        fd,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-            "Accept-Language": language,
-          },
-        }
-      )
-
+      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/product/${product.id}/update/`, {
+        method: "PATCH",
+        body: fd,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Accept-Language": language,
+        },
+      })
       onUpdateProduct({ ...product, price: tempPrice })
       setEditingId(null)
     } catch (err) {
       console.error(err)
-      alert(t("Error") + ": " + t("Failed to fetch suppliers"))
+      alert(t("Error") + ": " + t("Failed to update product"))
+    }
+  }
+
+  const handleToggleActive = async (product: Product, value: boolean) => {
+    try {
+      const token = localStorage.getItem("agroAdminToken")
+      const fd = new FormData()
+      fd.append("name_uz", product.name_uz)
+      fd.append("name_ru", product.name_ru)
+      fd.append("price", product.price.toString())
+      fd.append("category", product.category)
+      fd.append("unity", product.unity)
+      fd.append("tg_id", product.tg_id || "")
+      fd.append("code", product.code || "")
+      fd.append("article", product.article || "")
+      fd.append("quantity_left", product.quantity_left?.toString() || "")
+      fd.append("is_active", value ? "true" : "false")
+
+      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/product/${product.id}/update/`, {
+        method: "PATCH",
+        body: fd,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Accept-Language": language,
+        },
+      })
+      // onUpdateProduct bilan state yangilanadi
+      onUpdateProduct({ ...product, is_active: value })
+    } catch (err) {
+      console.error(err)
+      alert(t("Error") + ": " + t("Failed to update product"))
     }
   }
 
@@ -119,6 +145,7 @@ export function ProductTable({
             <TableRow>
               <TableHead>№</TableHead>
               <TableHead>{t("Name")}</TableHead>
+              <TableHead>{t("Image")}</TableHead>
               <TableHead>{t("Price")}</TableHead>
               <TableHead>{t("Category")}</TableHead>
               <TableHead>{t("Unit")}</TableHead>
@@ -127,20 +154,28 @@ export function ProductTable({
               <TableHead>{t("Article")}</TableHead>
               <TableHead>{t("quantity_Left")}</TableHead>
               <TableHead>{t("min_quantity")}</TableHead>
+              <TableHead>{t("Active")}</TableHead>
               <TableHead>{t("Actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {products.map((product, index) => (
-              <TableRow key={product.order_number}>
+              <TableRow key={product.id}>
                 <TableCell className="font-medium">
                   {(currentPage - 1) * itemsPerPage + index + 1}
                 </TableCell>
-
+                <TableCell>{language === "uz" ? product.name_uz : product.name_ru}</TableCell>
                 <TableCell>
-                  {language === "uz" ? product.name_uz : product.name_ru}
+                  {product.image ? (
+                    <div className="flex flex-col mr-2.5 items-start gap-1">
+                      <img
+                        src={`${process.env.NEXT_PUBLIC_API_ImgBASE_URL}${product.image}`}
+                        alt={product.name_uz}
+                        className="w-25 h-15 object-cover rounded"
+                      />
+                    </div>
+                  ) : "—"}
                 </TableCell>
-
                 <TableCell
                   onDoubleClick={() => handleDoubleClick(product)}
                   className="cursor-pointer"
@@ -152,10 +187,7 @@ export function ProductTable({
                       onChange={(e) => setTempPrice(e.target.value)}
                       onBlur={() => handlePriceUpdate(product)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault()
-                          handlePriceUpdate(product)
-                        }
+                        if (e.key === "Enter") handlePriceUpdate(product)
                         if (e.key === "Escape") setEditingId(null)
                       }}
                       autoFocus
@@ -163,20 +195,24 @@ export function ProductTable({
                     />
                   ) : (
                     product.price
-                  )}{" "}
-                  UZS
+                  )}{" "}UZS
                 </TableCell>
-
                 <TableCell>{getCategoryName(product.category)}</TableCell>
                 <TableCell>{getUnitName(product.unity)}</TableCell>
-                <TableCell>
-                  {product.tg_id && product.tg_id !== "none" ? product.tg_id : "—"}
-                </TableCell>
-
+                <TableCell>{product.tg_id && product.tg_id !== "none" ? product.tg_id : "—"}</TableCell>
                 <TableCell>{product.code || "—"}</TableCell>
                 <TableCell>{product.article || "—"}</TableCell>
                 <TableCell>{product.quantity_left || "—"}</TableCell>
                 <TableCell>{product.min_quantity || "—"}</TableCell>
+
+                {/* 🔹 is_active toggle avtomatik on/off */}
+                <TableCell>
+                  <Switch
+                    checked={!!product.is_active} // true bo‘lsa on, false bo‘lsa off
+                    onCheckedChange={(val) => handleToggleActive(product, val)}
+                  />
+                </TableCell>
+
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Button size="sm" variant="ghost" onClick={() => onEditProduct(product)}>
@@ -198,14 +234,12 @@ export function ProductTable({
         </Table>
       </div>
 
-      {/* 🔥 Delete Confirmation Dialog */}
+      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>{t("ConDel")}</DialogTitle>
-            <DialogDescription>
-              {t("sure")}
-            </DialogDescription>
+            <DialogDescription>{t("sure")}</DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
